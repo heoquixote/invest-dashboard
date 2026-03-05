@@ -76,6 +76,14 @@
                     </div>
                 </div>
                 <div class="header-right">
+                    <button class="btn-add-custom" id="btnAddCustomStock" title="종목 추가">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        <span>종목 추가</span>
+                    </button>
                     <button class="btn-theme-toggle" id="btnThemeToggle" title="테마 전환">🌙</button>
                     <button class="btn-refresh" id="btnRefresh" title="데이터 새로고침">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -331,6 +339,53 @@
                 <div class="modal-analysis" id="modalAnalysis">
                     <button class="btn-analyze" id="btnAnalyzeModal">🤖 AI 분석 실행</button>
                     <div class="analysis-result" id="modalAnalysisResult"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 종목 추가 모달 -->
+    <div class="modal-overlay" id="addStockModal">
+        <div class="modal-content add-stock-modal">
+            <button class="modal-close" id="addStockModalClose">&times;</button>
+            <div class="modal-header">
+                <h2>⭐ 종목 추가</h2>
+                <p class="add-stock-desc">모니터링할 종목을 추가하세요. Yahoo Finance / Google Finance에서 시세를 조회합니다.</p>
+            </div>
+            <div class="modal-body">
+                <div class="add-custom-form">
+                    <div class="form-group">
+                        <label class="form-label">종목 심볼 <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="customSymbol"
+                            placeholder="예: TSLA, 005930.KS, BTC-USD" autocomplete="off">
+                        <span class="form-hint">해외: AAPL, TSLA / 국내: 005930.KS / 코인: BTC-USD</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">종목명 (선택)</label>
+                        <input type="text" class="form-input" id="customName" placeholder="예: 테슬라, 삼성전자"
+                            autocomplete="off">
+                        <span class="form-hint">비워두면 심볼이 이름으로 사용됩니다</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">시장 구분</label>
+                        <select class="form-select" id="customMarket">
+                            <option value="overseas">🌎 해외 (USD)</option>
+                            <option value="korean">🇰🇷 국내 (KRW)</option>
+                            <option value="crypto">🪙 암호화폐</option>
+                            <option value="commodity">🥇 원자재</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn-submit-stock" id="btnSubmitCustom">추가하기</button>
+                        <button class="btn-cancel-stock" id="btnCancelCustom">취소</button>
+                    </div>
+                    <div class="form-message" id="customStockMessage"></div>
+                </div>
+                <div class="custom-stocks-list">
+                    <h3>📋 내가 추가한 종목</h3>
+                    <div id="customStocksList" class="custom-list-items">
+                        <p class="custom-empty">아직 추가한 종목이 없습니다.</p>
+                    </div>
                 </div>
             </div>
         </div>

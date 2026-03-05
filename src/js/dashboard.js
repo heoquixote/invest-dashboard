@@ -16,6 +16,7 @@ const state = {
     korean: [],
     gold: [],
     crypto: [],
+    custom: [],
     portfolio: JSON.parse(localStorage.getItem('portfolio') || '[]'),
     loading: false
 };
@@ -31,6 +32,7 @@ export async function initDashboard() {
     setupModalEvents();
     setupHeaderButtons();
     setupPortfolio();
+    setupCustomStockModal();
     await loadAllData();
     checkHealth();
 }
@@ -43,17 +45,19 @@ async function loadAllData() {
     updateLoadingUI(true);
 
     try {
-        const [overseas, korean, gold, crypto] = await Promise.all([
+        const [overseas, korean, gold, crypto, custom] = await Promise.all([
             api.fetchOverseasStocks().catch(() => ({ data: [] })),
             api.fetchKoreanStocks().catch(() => ({ data: [] })),
             api.fetchGold().catch(() => ({ data: [] })),
-            api.fetchCrypto().catch(() => ({ data: [] }))
+            api.fetchCrypto().catch(() => ({ data: [] })),
+            api.fetchCustomStocks().catch(() => ({ data: [] }))
         ]);
 
         state.overseas = overseas.data || [];
         state.korean = korean.data || [];
         state.gold = gold.data || [];
         state.crypto = crypto.data || [];
+        state.custom = custom.data || [];
 
         renderCurrentView();
         updateSummaryCards();
@@ -91,7 +95,7 @@ function updateSummaryCards() {
 }
 
 function getAllStocks() {
-    return [...state.overseas, ...state.korean, ...state.gold, ...state.crypto];
+    return [...state.overseas, ...state.korean, ...state.gold, ...state.crypto, ...state.custom];
 }
 
 /**
@@ -558,6 +562,145 @@ function updateLoadingUI(loading) {
  */
 export async function refreshData() {
     await loadAllData();
+}
+
+// =============================================
+// 커스텀 종목 추가 모달
+// =============================================
+
+function setupCustomStockModal() {
+    const btnOpen = document.getElementById('btnAddCustomStock');
+    const modal = document.getElementById('addStockModal');
+    const btnClose = document.getElementById('addStockModalClose');
+    const btnSubmit = document.getElementById('btnSubmitCustom');
+    const btnCancel = document.getElementById('btnCancelCustom');
+
+    btnOpen?.addEventListener('click', () => {
+        modal.classList.add('active');
+        loadCustomStocksList();
+        document.getElementById('customSymbol')?.focus();
+    });
+
+    btnClose?.addEventListener('click', () => modal.classList.remove('active'));
+    btnCancel?.addEventListener('click', () => modal.classList.remove('active'));
+
+    modal?.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('active');
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal?.classList.contains('active')) {
+            modal.classList.remove('active');
+        }
+    });
+
+    btnSubmit?.addEventListener('click', submitCustomStock);
+
+    // Enter 키로 제출
+    document.getElementById('customSymbol')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submitCustomStock();
+    });
+}
+
+async function submitCustomStock() {
+    const symbolInput = document.getElementById('customSymbol');
+    const nameInput = document.getElementById('customName');
+    const marketSelect = document.getElementById('customMarket');
+    const msgEl = document.getElementById('customStockMessage');
+    const btnSubmit = document.getElementById('btnSubmitCustom');
+
+    const symbol = symbolInput?.value.trim();
+    const name = nameInput?.value.trim();
+    const market = marketSelect?.value;
+
+    if (!symbol) {
+        showCustomMessage(msgEl, '심볼을 입력해주세요.', 'error');
+        symbolInput?.focus();
+        return;
+    }
+
+    btnSubmit.disabled = true;
+    btnSubmit.textContent = '추가 중...';
+
+    try {
+        const result = await api.addCustomStock(symbol, name, market);
+        if (result.success) {
+            showCustomMessage(msgEl, `✅ ${result.data.name} (${result.data.symbol}) 추가 완료!`, 'success');
+            symbolInput.value = '';
+            nameInput.value = '';
+            loadCustomStocksList();
+            // 데이터 새로고침
+            setTimeout(async () => {
+                const custom = await api.fetchCustomStocks().catch(() => ({ data: [] }));
+                state.custom = custom.data || [];
+                renderCurrentView();
+                updateSummaryCards();
+            }, 500);
+        } else {
+            showCustomMessage(msgEl, `❌ ${result.error || '추가 실패'}`, 'error');
+        }
+    } catch (error) {
+        showCustomMessage(msgEl, `❌ ${error.message || '서버 오류'}`, 'error');
+    } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = '추가하기';
+    }
+}
+
+function showCustomMessage(el, text, type) {
+    if (!el) return;
+    el.textContent = text;
+    el.className = `form-message ${type}`;
+    setTimeout(() => {
+        el.className = 'form-message';
+        el.textContent = '';
+    }, 4000);
+}
+
+async function loadCustomStocksList() {
+    const listEl = document.getElementById('customStocksList');
+    if (!listEl) return;
+
+    try {
+        const res = await api.fetchCustomStocks();
+        const stocks = res.data || [];
+
+        if (stocks.length === 0) {
+            listEl.innerHTML = '<p class="custom-empty">아직 추가한 종목이 없습니다.</p>';
+            return;
+        }
+
+        listEl.innerHTML = stocks.map(s => `
+            <div class="custom-stock-item">
+                <div class="custom-stock-info">
+                    <span class="custom-stock-symbol">${s.symbol}</span>
+                    <span class="custom-stock-name">${s.name || s.symbol} · ${s.currency === 'KRW' ? '₩' : '$'}${s.price?.toLocaleString() || '-'}</span>
+                </div>
+                <button class="btn-remove-custom" data-symbol="${s.symbol}">삭제</button>
+            </div>
+        `).join('');
+
+        // 삭제 버튼 이벤트
+        listEl.querySelectorAll('.btn-remove-custom').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const symbol = btn.dataset.symbol;
+                if (!confirm(`${symbol} 종목을 삭제하시겠습니까?`)) return;
+                try {
+                    await api.deleteCustomStock(symbol);
+                    loadCustomStocksList();
+                    // 데이터 새로고침
+                    const custom = await api.fetchCustomStocks().catch(() => ({ data: [] }));
+                    state.custom = custom.data || [];
+                    renderCurrentView();
+                    updateSummaryCards();
+                } catch (e) {
+                    alert('삭제 실패: ' + e.message);
+                }
+            });
+        });
+    } catch (e) {
+        listEl.innerHTML = '<p class="custom-empty">목록 로드 실패</p>';
+    }
 }
 
 // =============================================

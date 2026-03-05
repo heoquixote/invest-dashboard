@@ -65,3 +65,18 @@ export async function fetchCollectionInfo() {
 export async function fetchExchangeRate() {
     return fetchJSON('/exchange-rate');
 }
+
+export async function fetchCustomStocks() {
+    return fetchJSON('/stocks/custom');
+}
+
+export async function addCustomStock(symbol, name, market) {
+    return fetchJSON('/stocks/custom', {
+        method: 'POST',
+        body: JSON.stringify({ symbol, name, market })
+    });
+}
+
+export async function deleteCustomStock(symbol) {
+    return fetchJSON(`/stocks/custom/${encodeURIComponent(symbol)}`, { method: 'DELETE' });
+}
