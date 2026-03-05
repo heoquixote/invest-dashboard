@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Investment Dashboard - 투자 분석 대시보드</title>
+    <meta name="description" content="해외 주식, 국내 주식, 금 시세를 실시간 모니터링하고 AI 분석으로 매수/매도 추천을 받는 투자 대시보드">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+    <div class="app">
+        <!-- 사이드바 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">📊</span>
+                    <span class="logo-text">InvestBoard</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-view="all" id="nav-overview">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-label">대시보드</span>
+                </button>
+                <button class="nav-item" data-view="overseas" id="nav-overseas">
+                    <span class="nav-icon">🌎</span>
+                    <span class="nav-label">해외 주식</span>
+                </button>
+                <button class="nav-item" data-view="korean" id="nav-korean">
+                    <span class="nav-icon">🇰🇷</span>
+                    <span class="nav-label">국내 주식</span>
+                </button>
+                <button class="nav-item" data-view="commodity" id="nav-gold">
+                    <span class="nav-icon">🥇</span>
+                    <span class="nav-label">금 / 원자재</span>
+                </button>
+                <button class="nav-item" data-view="crypto" id="nav-crypto">
+                    <span class="nav-icon">🪙</span>
+                    <span class="nav-label">암호화폐</span>
+                </button>
+                <button class="nav-item" data-view="portfolio" id="nav-portfolio">
+                    <span class="nav-icon">💼</span>
+                    <span class="nav-label">내 포트폴리오</span>
+                </button>
+                <button class="nav-item" data-view="analysis" id="nav-analysis">
+                    <span class="nav-icon">🤖</span>
+                    <span class="nav-label">AI 분석</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-dot"></span>
+                    <span class="status-text">연결 중...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 메인 콘텐츠 -->
+        <main class="main-content">
+            <!-- 헤더 -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h1 id="viewTitle">대시보드</h1>
+                    <div class="header-meta">
+                        <span class="data-date" id="dataDate" title="최신 데이터 수집 시점">📅 데이터 기준일: 로딩 중...</span>
+                        <span class="header-meta-divider">|</span>
+                        <span class="last-update" id="lastUpdate">업데이트 대기 중...</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="btn-theme-toggle" id="btnThemeToggle" title="테마 전환">🌙</button>
+                    <button class="btn-refresh" id="btnRefresh" title="데이터 새로고침">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8" />
+                            <path d="M21 3v5h-5" />
+                            <path d="M21 12a9 9 0 01-9 9 9.75 9.75 0 01-6.74-2.74L3 16" />
+                            <path d="M3 21v-5h5" />
+                        </svg>
+                    </button>
+                    <button class="btn-collect" id="btnCollect" title="데이터 수집 실행">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        <span>수집</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- 요약 카드 -->
+            <section class="summary-cards" id="summaryCards">
+                <div class="summary-card" id="cardTotal">
+                    <div class="card-icon total">📈</div>
+                    <div class="card-info">
+                        <span class="card-label">총 모니터링</span>
+                        <span class="card-value" id="totalCount">-</span>
+                    </div>
+                </div>
+                <div class="summary-card" id="cardUp">
+                    <div class="card-icon up">▲</div>
+                    <div class="card-info">
+                        <span class="card-label">상승 종목</span>
+                        <span class="card-value up" id="upCount">-</span>
+                    </div>
+                </div>
+                <div class="summary-card" id="cardDown">
+                    <div class="card-icon down">▼</div>
+                    <div class="card-info">
+                        <span class="card-label">하락 종목</span>
+                        <span class="card-value down" id="downCount">-</span>
+                    </div>
+                </div>
+                <div class="summary-card" id="cardCoverage">
+                    <div class="card-icon coverage">📡</div>
+                    <div class="card-info">
+                        <span class="card-label">데이터 수집</span>
+                        <span class="card-value" id="coverageCount">-</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 필터 바 -->
+            <div class="filter-bar" id="marketFilterBar">
+                <div class="filter-group">
+                    <span class="filter-group-label">시장</span>
+                    <button class="filter-tab active" data-filter="all">전체</button>
+                    <button class="filter-tab" data-filter="overseas">🌎 해외</button>
+                    <button class="filter-tab" data-filter="korean">🇰🇷 국내</button>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group" id="movementFilters">
+                    <span class="filter-group-label">등락</span>
+                    <button class="movement-chip active" data-movement="all">전체</button>
+                    <button class="movement-chip up" data-movement="up">▲ 상승</button>
+                    <button class="movement-chip down" data-movement="down">▼ 하락</button>
+                    <button class="movement-chip spike" data-movement="spike">🔥 급등 5%+</button>
+                    <button class="movement-chip crash" data-movement="crash">💥 급락 5%+</button>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group" id="categoryFilters">
+                    <span class="filter-group-label">카테고리</span>
+                    <button class="category-chip active" data-category="all">전체</button>
+                    <button class="category-chip" data-category="tech">🖥️ 기술주</button>
+                    <button class="category-chip" data-category="semiconductor">💾 반도체</button>
+                    <button class="category-chip" data-category="defense">🛡️ 방산</button>
+                    <button class="category-chip" data-category="energy">⚡ 에너지</button>
+                    <button class="category-chip" data-category="consumer">🛒 소비재</button>
+                    <button class="category-chip" data-category="healthcare">💊 헬스케어</button>
+                    <button class="category-chip" data-category="finance">🏦 금융</button>
+                    <button class="category-chip" data-category="communication">📡 통신</button>
+                    <button class="category-chip" data-category="industrial">🏭 산업재</button>
+                    <button class="category-chip" data-category="ai_data">🤖 AI</button>
+                    <button class="category-chip" data-category="etf_us">📊 해외ETF</button>
+                    <button class="category-chip" data-category="kr_major">🇰🇷 대표</button>
+                    <button class="category-chip" data-category="kr_finance">🏦 금융(KR)</button>
+                    <button class="category-chip" data-category="kr_battery">🔋 2차전지</button>
+                    <button class="category-chip" data-category="kr_defense">🛡️ 방산(KR)</button>
+                    <button class="category-chip" data-category="kr_bio">🧬 바이오</button>
+                    <button class="category-chip" data-category="kr_it">💻 IT(KR)</button>
+                    <button class="category-chip" data-category="kr_heavy">🏗️ 중공업</button>
+                    <button class="category-chip" data-category="kr_consumer">🛒 소비(KR)</button>
+                    <button class="category-chip" data-category="etf_kr">📊 국내ETF</button>
+                    <button class="category-chip" data-category="commodity">🥇 귀금속</button>
+                    <button class="category-chip" data-category="minerals">⛏️ 광물</button>
+                    <button class="category-chip" data-category="crypto">🪙 코인</button>
+                </div>
+            </div>
+
+            <!-- 종목 카드 그리드 (테마별 그룹) -->
+            <section class="stocks-section" id="stocksSection">
+                <div id="stocksGrid">
+                    <div class="loading-placeholder">
+                        <div class="spinner"></div>
+                        <p>데이터를 불러오는 중...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 차트 영역 -->
+            <section class="chart-section" id="chartSection" style="display:none;">
+                <div class="chart-header">
+                    <h2 id="chartTitle">가격 차트</h2>
+                    <div class="chart-period-tabs">
+                        <button class="period-tab active" data-period="5d">1W</button>
+                        <button class="period-tab" data-period="1mo">1M</button>
+                        <button class="period-tab" data-period="3mo">3M</button>
+                        <button class="period-tab" data-period="1y">1Y</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </section>
+
+            <!-- 내 포트폴리오 -->
+            <section class="portfolio-section" id="portfolioSection" style="display:none;">
+                <div class="portfolio-header">
+                    <h2>💼 내 포트폴리오</h2>
+                    <div class="portfolio-actions">
+                        <button class="btn-add-stock" id="btnAddStock">+ 종목 추가</button>
+                    </div>
+                </div>
+
+                <!-- 포트폴리오 요약 -->
+                <div class="pf-summary" id="pfSummary">
+                    <div class="pf-summary-card">
+                        <span class="pf-summary-label">💰 총 평가액 (KRW)</span>
+                        <span class="pf-summary-value" id="pfTotalKRW">₩0</span>
+                    </div>
+                    <div class="pf-summary-card">
+                        <span class="pf-summary-label">📊 총 투자금</span>
+                        <span class="pf-summary-value" id="pfTotalInvested">₩0</span>
+                    </div>
+                    <div class="pf-summary-card">
+                        <span class="pf-summary-label">📈 총 손익</span>
+                        <span class="pf-summary-value" id="pfTotalGain">₩0</span>
+                        <span class="pf-summary-sub" id="pfTotalGainPct">0.00%</span>
+                    </div>
+                    <div class="pf-summary-card">
+                        <span class="pf-summary-label">💱 환율 (USD/KRW)</span>
+                        <span class="pf-summary-value" id="pfExchangeRate">₩1,350</span>
+                    </div>
+                </div>
+
+                <!-- 종목 추가 폼 -->
+                <div class="portfolio-add-form" id="portfolioAddForm" style="display:none;">
+                    <div class="add-form-inner">
+                        <div class="add-form-row">
+                            <label class="add-form-label">종목 선택</label>
+                            <select class="add-stock-select" id="addStockSelect">
+                                <option value="">-- 기존 종목에서 선택 --</option>
+                            </select>
+                        </div>
+                        <div class="add-form-row">
+                            <label class="add-form-label">또는 직접 입력</label>
+                            <input type="text" class="add-stock-input" id="addStockInput"
+                                placeholder="심볼 (예: AAPL, 005930.KS)" autocomplete="off">
+                            <input type="text" class="add-stock-name" id="addStockName" placeholder="종목명">
+                        </div>
+                        <div class="add-form-row">
+                            <label class="add-form-label">수량 &amp; 매입가</label>
+                            <input type="number" class="add-stock-qty" id="addStockQty" placeholder="수량" min="0"
+                                step="any" value="1">
+                            <input type="number" class="add-stock-buy-price" id="addStockBuyPrice" placeholder="매입 단가"
+                                min="0" step="any">
+                            <select class="add-stock-market" id="addStockMarket">
+                                <option value="overseas">🌎 해외(USD)</option>
+                                <option value="korean">🇰🇷 국내(KRW)</option>
+                            </select>
+                        </div>
+                        <div class="add-form-actions">
+                            <button class="btn-confirm-add" id="btnConfirmAdd">추가</button>
+                            <button class="btn-cancel-add" id="btnCancelAdd">취소</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 포트폴리오 종목 리스트 -->
+                <div class="portfolio-stocks" id="portfolioStocks">
+                    <div class="portfolio-empty">
+                        <span class="portfolio-empty-icon">📂</span>
+                        <p>포트폴리오가 비어 있습니다.<br>"+ 종목 추가" 버튼으로 관심 종목을 추가해보세요.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI 분석 패널 -->
+            <section class="analysis-section" id="analysisSection" style="display:none;">
+                <div class="analysis-header">
+                    <h2>🤖 AI 투자 분석</h2>
+                    <button class="btn-analyze-all" id="btnAnalyzeAll">전체 포트폴리오 분석</button>
+                </div>
+                <div class="analysis-content" id="analysisContent">
+                    <div class="analysis-empty">
+                        <span class="analysis-empty-icon">🔍</span>
+                        <p>종목 카드에서 "AI 분석" 버튼을 클릭하거나<br>전체 포트폴리오 분석을 실행해주세요.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 종목 상세 모달 -->
+    <div class="modal-overlay" id="stockModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <div class="modal-header" id="modalHeader">
+                <h2 id="modalTitle">종목명</h2>
+                <div class="modal-price-row">
+                    <span class="modal-price" id="modalPrice">$0.00</span>
+                    <span class="modal-change-badge" id="modalChangeBadge"></span>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-chart">
+                    <canvas id="modalChart"></canvas>
+                </div>
+                <div class="modal-metrics-grid">
+                    <div class="modal-metric">
+                        <span class="modal-metric-label">변동률</span>
+                        <span class="modal-metric-value" id="modalChange">▲ 0.00%</span>
+                    </div>
+                    <div class="modal-metric">
+                        <span class="modal-metric-label">전일종가 <span class="modal-date" id="modalPrevDate"></span></span>
+                        <span class="modal-metric-value" id="modalPrevClose">-</span>
+                    </div>
+                    <div class="modal-metric">
+                        <span class="modal-metric-label">52주 최고</span>
+                        <span class="modal-metric-value" id="modalHigh52">$0</span>
+                    </div>
+                    <div class="modal-metric">
+                        <span class="modal-metric-label">52주 최저</span>
+                        <span class="modal-metric-value" id="modalLow52">$0</span>
+                    </div>
+                    <div class="modal-metric">
+                        <span class="modal-metric-label">전월비</span>
+                        <span class="modal-metric-value" id="modalMonthly">-</span>
+                    </div>
+                </div>
+                <div class="modal-analysis" id="modalAnalysis">
+                    <button class="btn-analyze" id="btnAnalyzeModal">🤖 AI 분석 실행</button>
+                    <div class="analysis-result" id="modalAnalysisResult"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
+</body>
+
+</html>

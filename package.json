@@ -1,0 +1,27 @@
+{
+  "name": "invest-dashboard",
+  "version": "1.0.0",
+  "description": "투자 분석 대시보드 - 해외/국내 주식, 금 시세 크롤링 + LLM 분석",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"nodemon --ignore data/ server/index.js\" \"vite\"",
+    "dev:server": "nodemon --ignore data/ server/index.js",
+    "dev:client": "vite",
+    "build": "vite build",
+    "start": "node server/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "googleapis": "^128.0.0",
+    "yahoo-finance2": "^2.11.0",
+    "@google/generative-ai": "^0.21.0",
+    "node-cron": "^3.0.3"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.0"
+  }
+}
