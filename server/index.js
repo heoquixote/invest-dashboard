@@ -62,6 +62,67 @@ app.get('/api/collection-info', (req, res) => {
     res.json({ success: true, data: info });
 });
 
+// 시장 지수 조회 (S&P 500, NASDAQ-100, KOSPI, KOSDAQ)
+app.get('/api/indices', async (req, res) => {
+    try {
+        const indices = [
+            { symbol: '^GSPC', name: 'S&P 500', emoji: '🇺🇸' },
+            { symbol: '^NDX', name: 'NASDAQ-100', emoji: '📈' },
+            { symbol: '^KS11', name: 'KOSPI', emoji: '🇰🇷' },
+            { symbol: '^KQ11', name: 'KOSDAQ', emoji: '🚀' }
+        ];
+
+        const YAHOO_HEADERS = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+            'Accept': 'application/json',
+        };
+
+        const results = await Promise.all(
+            indices.map(async (idx) => {
+                try {
+                    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(idx.symbol)}?interval=1d&range=1mo`;
+                    const fetchRes = await fetch(url, { headers: YAHOO_HEADERS });
+                    if (!fetchRes.ok) throw new Error(`HTTP ${fetchRes.status}`);
+
+                    const data = await fetchRes.json();
+                    const result = data?.chart?.result?.[0];
+                    if (!result) throw new Error('No data');
+
+                    const meta = result.meta;
+                    const prevClose = meta.chartPreviousClose || meta.previousClose || 0;
+                    const price = meta.regularMarketPrice || 0;
+                    const change = price - prevClose;
+                    const changePercent = prevClose ? (change / prevClose) * 100 : 0;
+
+                    // 스파크라인용 히스토리 추출
+                    const quote = result.indicators?.quote?.[0];
+                    const closes = quote?.close?.filter(c => c != null) || [];
+                    const history = closes.map(c => ({ close: c }));
+
+                    return {
+                        symbol: idx.symbol,
+                        name: idx.name,
+                        emoji: idx.emoji,
+                        price,
+                        changePercent,
+                        previousClose: prevClose,
+                        currency: meta.currency || 'USD',
+                        history
+                    };
+                } catch (e) {
+                    console.error(`지수 조회 실패 (${idx.symbol}):`, e.message);
+                    return { symbol: idx.symbol, name: idx.name, emoji: idx.emoji, price: null, changePercent: 0, history: [] };
+                }
+            })
+        );
+
+        res.json({ success: true, data: results });
+    } catch (error) {
+        console.error('시장 지수 API 오류:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // 환율 조회
 app.get('/api/exchange-rate', (req, res) => {
     const data = collector.getLatestData();

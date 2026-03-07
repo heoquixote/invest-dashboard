@@ -74,23 +74,81 @@ async function loadAllData() {
 }
 
 /**
- * 요약 카드 업데이트
+ * 시장 지수 및 통계 KPI 카드 업데이트
  */
-function updateSummaryCards() {
+async function updateSummaryCards() {
+    // 1. 기존 통계 업데이트 (Total, Up, Down, Coverage)
     const all = getAllStocks();
     const upCount = all.filter(s => (s.dailyChangePercent ?? s.changePercent ?? 0) > 0).length;
     const downCount = all.filter(s => (s.dailyChangePercent ?? s.changePercent ?? 0) < 0).length;
     const withPrice = all.filter(s => s.price > 0).length;
 
-    document.getElementById('totalCount').textContent = all.length;
-    document.getElementById('upCount').textContent = upCount;
-    document.getElementById('downCount').textContent = downCount;
-
-    // 데이터 수집 커버리지
+    const totalEl = document.getElementById('totalCount');
+    const upEl = document.getElementById('upCount');
+    const downEl = document.getElementById('downCount');
     const coverageEl = document.getElementById('coverageCount');
+
+    if (totalEl) totalEl.textContent = all.length;
+    if (upEl) upEl.textContent = upCount;
+    if (downEl) downEl.textContent = downCount;
     if (coverageEl) {
         coverageEl.textContent = `${withPrice}/${all.length}`;
         coverageEl.title = `종가 기준 ${withPrice}개 종목 수집 완료`;
+    }
+
+    // 2. 시장 지수 업데이트
+    try {
+        const res = await api.fetchIndices();
+        const indices = res.data || [];
+
+        const indexMap = {
+            '^GSPC': { priceId: 'sp500Price', changeId: 'sp500Change', cardId: 'cardSP500', sparkId: 'sparkline-GSPC' },
+            '^NDX': { priceId: 'nasdaqPrice', changeId: 'nasdaqChange', cardId: 'cardNASDAQ', sparkId: 'sparkline-NDX' },
+            '^KS11': { priceId: 'kospiPrice', changeId: 'kospiChange', cardId: 'cardKOSPI', sparkId: 'sparkline-KS11' },
+            '^KQ11': { priceId: 'kosdaqPrice', changeId: 'kosdaqChange', cardId: 'cardKOSDAQ', sparkId: 'sparkline-KQ11' }
+        };
+
+        indices.forEach(idx => {
+            const mapping = indexMap[idx.symbol];
+            if (!mapping) return;
+
+            const priceEl = document.getElementById(mapping.priceId);
+            const changeEl = document.getElementById(mapping.changeId);
+            const cardEl = document.getElementById(mapping.cardId);
+
+            if (priceEl && idx.price != null) {
+                // KOSPI/KOSDAQ은 소수점 2자리, US 지수는 소수점 2자리 + 콤마
+                priceEl.textContent = idx.price.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            const pct = idx.changePercent || 0;
+            const isUp = pct >= 0;
+
+            if (changeEl) {
+                const arrow = isUp ? '▲' : '▼';
+                changeEl.textContent = `${arrow} ${Math.abs(pct).toFixed(2)}%`;
+                changeEl.className = `card-change ${isUp ? 'up' : 'down'}`;
+            }
+
+            // 카드 전체에 up/down 클래스 추가
+            if (cardEl) {
+                cardEl.classList.remove('up', 'down');
+                cardEl.classList.add(isUp ? 'up' : 'down');
+            }
+
+            // 스파크라인 그리기
+            if (mapping.sparkId && idx.history?.length > 0) {
+                // 부드러운 렌더링을 위해 약간의 지연 후 실행
+                setTimeout(() => {
+                    drawSparkline(mapping.sparkId, idx.history, isUp);
+                }, 100);
+            }
+        });
+    } catch (error) {
+        console.error('시장 지수 로드 실패:', error);
     }
 }
 
@@ -232,12 +290,13 @@ function renderThemedStocks(stocks) {
         section.appendChild(themeGrid);
         grid.appendChild(section);
 
-        // 스파크라인 그리기
+        // 스파크라인 그리기 (실제 7일 종가 데이터 사용)
         setTimeout(() => {
             themeStocks.forEach(stock => {
                 const canvasId = `sparkline-${stock.symbol.replace(/[^a-zA-Z0-9]/g, '_')}`;
                 const dailyPct = stock.dailyChangePercent ?? stock.changePercent ?? 0;
-                drawSparkline(canvasId, stock.history || generateMiniData(stock.price), dailyPct >= 0);
+                const historyData = (stock.history && stock.history.length >= 2) ? stock.history : generateMiniData(stock.price);
+                drawSparkline(canvasId, historyData, dailyPct >= 0);
             });
         }, 100);
     }

@@ -106,35 +106,74 @@
                 </div>
             </header>
 
-            <!-- 요약 카드 -->
+            <!-- KPI 및 시장 지수 카드 -->
             <section class="summary-cards" id="summaryCards">
+                <!-- 기존 통계 카드 -->
                 <div class="summary-card" id="cardTotal">
-                    <div class="card-icon total">📈</div>
+                    <div class="card-icon total">📊</div>
                     <div class="card-info">
-                        <span class="card-label">총 모니터링</span>
-                        <span class="card-value" id="totalCount">-</span>
+                        <span class="card-label">전체 종목</span>
+                        <span class="card-value" id="totalCount">0</span>
                     </div>
                 </div>
                 <div class="summary-card" id="cardUp">
-                    <div class="card-icon up">▲</div>
+                    <div class="card-icon up">📈</div>
                     <div class="card-info">
                         <span class="card-label">상승 종목</span>
-                        <span class="card-value up" id="upCount">-</span>
+                        <span class="card-value up" id="upCount">0</span>
                     </div>
                 </div>
                 <div class="summary-card" id="cardDown">
-                    <div class="card-icon down">▼</div>
+                    <div class="card-icon down">📉</div>
                     <div class="card-info">
                         <span class="card-label">하락 종목</span>
-                        <span class="card-value down" id="downCount">-</span>
+                        <span class="card-value down" id="downCount">0</span>
                     </div>
                 </div>
                 <div class="summary-card" id="cardCoverage">
                     <div class="card-icon coverage">📡</div>
                     <div class="card-info">
-                        <span class="card-label">데이터 수집</span>
-                        <span class="card-value" id="coverageCount">-</span>
+                        <span class="card-label">데이터 수집율</span>
+                        <span class="card-value" id="coverageCount">0/0</span>
                     </div>
+                </div>
+
+                <!-- 시장 지수 카드 -->
+                <div class="summary-card index-card" id="cardSP500">
+                    <div class="card-icon index-us">🇺🇸</div>
+                    <div class="card-info">
+                        <span class="card-label">S&P 500</span>
+                        <span class="card-value" id="sp500Price">-</span>
+                        <span class="card-change" id="sp500Change">-</span>
+                    </div>
+                    <canvas class="index-sparkline" id="sparkline-GSPC"></canvas>
+                </div>
+                <div class="summary-card index-card" id="cardNASDAQ">
+                    <div class="card-icon index-nasdaq">📈</div>
+                    <div class="card-info">
+                        <span class="card-label">NASDAQ-100</span>
+                        <span class="card-value" id="nasdaqPrice">-</span>
+                        <span class="card-change" id="nasdaqChange">-</span>
+                    </div>
+                    <canvas class="index-sparkline" id="sparkline-NDX"></canvas>
+                </div>
+                <div class="summary-card index-card" id="cardKOSPI">
+                    <div class="card-icon index-kr">🇰🇷</div>
+                    <div class="card-info">
+                        <span class="card-label">KOSPI</span>
+                        <span class="card-value" id="kospiPrice">-</span>
+                        <span class="card-change" id="kospiChange">-</span>
+                    </div>
+                    <canvas class="index-sparkline" id="sparkline-KS11"></canvas>
+                </div>
+                <div class="summary-card index-card" id="cardKOSDAQ">
+                    <div class="card-icon index-kosdaq">🚀</div>
+                    <div class="card-info">
+                        <span class="card-label">KOSDAQ</span>
+                        <span class="card-value" id="kosdaqPrice">-</span>
+                        <span class="card-change" id="kosdaqChange">-</span>
+                    </div>
+                    <canvas class="index-sparkline" id="sparkline-KQ11"></canvas>
                 </div>
             </section>
 
@@ -152,8 +191,8 @@
                     <button class="movement-chip active" data-movement="all">전체</button>
                     <button class="movement-chip up" data-movement="up">▲ 상승</button>
                     <button class="movement-chip down" data-movement="down">▼ 하락</button>
-                    <button class="movement-chip spike" data-movement="spike">🔥 급등 5%+</button>
-                    <button class="movement-chip crash" data-movement="crash">💥 급락 5%+</button>
+                    <button class="movement-chip spike" data-movement="spike">🔥 급등 5%</button>
+                    <button class="movement-chip crash" data-movement="crash">💥 급락 -5%</button>
                 </div>
                 <div class="filter-divider"></div>
                 <div class="filter-group" id="categoryFilters">

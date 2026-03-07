@@ -354,7 +354,7 @@ const YAHOO_HEADERS = {
  * Yahoo Finance v8 API로 시세 조회 (직접 HTTP)
  */
 async function fetchYahooQuote(symbol) {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=7d`;
 
     try {
         const res = await fetch(url, { headers: YAHOO_HEADERS });
@@ -371,6 +371,10 @@ async function fetchYahooQuote(symbol) {
         const change = price - prevClose;
         const changePercent = prevClose ? (change / prevClose) * 100 : 0;
 
+        // 7일간 종가 히스토리 추출
+        const closes = quote?.close?.filter(c => c != null) || [];
+        const history = closes.map(c => ({ close: c }));
+
         return {
             symbol,
             price,
@@ -383,7 +387,8 @@ async function fetchYahooQuote(symbol) {
             previousClose: prevClose,
             dayHigh: meta.regularMarketDayHigh || (quote?.high?.slice(-1)[0]) || 0,
             dayLow: meta.regularMarketDayLow || (quote?.low?.slice(-1)[0]) || 0,
-            marketCap: 0, // v8 chart doesn't include marketCap
+            marketCap: 0,
+            history,
             source: 'yahoo'
         };
     } catch (error) {
@@ -524,6 +529,7 @@ async function getQuote(symbol) {
 /**
  * 전일비 + 전월비 데이터 추가
  * Google Finance 변동 데이터를 전일비로, Yahoo 1mo 히스토리로 전월비 계산
+ * + 최근 7일 종가 히스토리를 스파크라인용으로 추출
  */
 async function enrichWithComparisons(quote) {
     if (!quote || !quote.price) return quote;
@@ -561,6 +567,12 @@ async function enrichWithComparisons(quote) {
                         quote.dailyChange = quote.price - prevDayClose;
                         quote.dailyChangePercent = ((quote.price - prevDayClose) / prevDayClose) * 100;
                     }
+                }
+
+                // 스파크라인용 최근 7일 종가 히스토리 추출
+                if (!quote.history || quote.history.length === 0) {
+                    const last7 = closes.slice(-7);
+                    quote.history = last7.map(c => ({ close: c }));
                 }
             }
         }

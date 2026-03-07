@@ -499,6 +499,68 @@ body {
     background: linear-gradient(135deg, #3b82f6, #8b5cf6);
 }
 
+/* Index Card Icons */
+.card-icon.index-us {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.card-icon.index-nasdaq {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+}
+
+.card-icon.index-kr {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.card-icon.index-kosdaq {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+/* Index Card Change Badge */
+.card-change {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    transition: color var(--transition-fast);
+}
+
+.card-change.up {
+    color: var(--color-up);
+}
+
+.card-change.down {
+    color: var(--color-down);
+}
+
+/* Index Card Up/Down Border Glow */
+.index-card.up {
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.index-card.up:hover {
+    border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.1);
+}
+
+.index-card.down {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.index-card.down:hover {
+    border-color: rgba(239, 68, 68, 0.5);
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.1);
+}
+
+.index-sparkline {
+    position: absolute;
+    right: 16px;
+    bottom: 12px;
+    width: 100px;
+    height: 40px;
+    opacity: 0.8;
+    pointer-events: none;
+}
+
 /* ==========================================
    Portfolio Section
    ========================================== */

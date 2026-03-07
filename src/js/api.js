@@ -62,6 +62,10 @@ export async function fetchCollectionInfo() {
     return fetchJSON('/collection-info');
 }
 
+export async function fetchIndices() {
+    return fetchJSON('/indices');
+}
+
 export async function fetchExchangeRate() {
     return fetchJSON('/exchange-rate');
 }

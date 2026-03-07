@@ -4,5 +4,11 @@
     "name": "테슬라",
     "market": "overseas",
     "addedAt": "2026-03-05T01:29:28.172Z"
+  },
+  {
+    "symbol": "SNDK",
+    "name": "SNDK",
+    "market": "overseas",
+    "addedAt": "2026-03-05T01:30:44.407Z"
   }
 ]
