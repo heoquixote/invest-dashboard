@@ -11,6 +11,11 @@ const __dirname = path.dirname(__filename);
 const CUSTOM_STOCKS_PATH = path.resolve(__dirname, '../../data/custom_stocks.json');
 
 const router = Router();
+const SYMBOL_META_MAP = new Map(
+    Object.values(yahooFinance.STOCK_THEMES)
+        .flatMap(theme => theme.stocks)
+        .map(stock => [stock.symbol, stock])
+);
 
 // 커스텀 종목 파일 읽기/쓰기 헬퍼
 function readCustomStocks() {
@@ -24,6 +29,32 @@ function readCustomStocks() {
 
 function writeCustomStocks(stocks) {
     fs.writeFileSync(CUSTOM_STOCKS_PATH, JSON.stringify(stocks, null, 2), 'utf-8');
+}
+
+function attachExternalMeta(stock) {
+    const meta = SYMBOL_META_MAP.get(stock.symbol);
+    if (!meta) return stock;
+
+    const enriched = { ...stock };
+    if (meta.korCode && !enriched.korCode) {
+        enriched.korCode = meta.korCode;
+    }
+
+    if (!enriched.externalUrl) {
+        if (meta.korCode) {
+            enriched.externalProvider = 'naver';
+            enriched.externalUrl = `https://finance.naver.com/item/main.naver?code=${meta.korCode}`;
+        } else if (meta.gFinance) {
+            enriched.externalProvider = 'google';
+            enriched.externalUrl = `https://www.google.com/finance/quote/${encodeURIComponent(meta.gFinance)}`;
+        }
+    }
+
+    return enriched;
+}
+
+function attachExternalMetaList(stocks = []) {
+    return stocks.map(attachExternalMeta);
 }
 
 /**
@@ -48,19 +79,19 @@ router.get('/themes', (req, res) => {
 router.get('/overseas', async (req, res) => {
     try {
         const cached = cache.get('overseas_stocks');
-        if (cached) return res.json({ success: true, data: cached, cached: true });
+        if (cached) return res.json({ success: true, data: attachExternalMetaList(cached), cached: true });
 
         // 메모리 캐시에서 최신 수집 데이터 확인
         const latest = collector.getLatestData();
         if (latest.overseas.length > 0) {
             cache.set('overseas_stocks', latest.overseas, 5 * 60 * 1000);
-            return res.json({ success: true, data: latest.overseas });
+            return res.json({ success: true, data: attachExternalMetaList(latest.overseas) });
         }
 
         // 캐시 없으면 직접 조회
         const stocks = await yahooFinance.getOverseasStocks();
         cache.set('overseas_stocks', stocks, 5 * 60 * 1000);
-        res.json({ success: true, data: stocks });
+        res.json({ success: true, data: attachExternalMetaList(stocks) });
     } catch (error) {
         console.error('해외 주식 API 오류:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -73,17 +104,17 @@ router.get('/overseas', async (req, res) => {
 router.get('/korean', async (req, res) => {
     try {
         const cached = cache.get('korean_stocks');
-        if (cached) return res.json({ success: true, data: cached, cached: true });
+        if (cached) return res.json({ success: true, data: attachExternalMetaList(cached), cached: true });
 
         const latest = collector.getLatestData();
         if (latest.korean.length > 0) {
             cache.set('korean_stocks', latest.korean, 5 * 60 * 1000);
-            return res.json({ success: true, data: latest.korean });
+            return res.json({ success: true, data: attachExternalMetaList(latest.korean) });
         }
 
         const stocks = await yahooFinance.getKoreanStocks();
         cache.set('korean_stocks', stocks, 5 * 60 * 1000);
-        res.json({ success: true, data: stocks });
+        res.json({ success: true, data: attachExternalMetaList(stocks) });
     } catch (error) {
         console.error('국내 주식 API 오류:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -110,7 +141,7 @@ router.get('/custom', async (req, res) => {
                 quote.themeName = '⭐ 내가 추가한 종목';
                 quote.market = item.market || 'overseas';
                 quote.isCustom = true;
-                results.push(quote);
+                results.push(attachExternalMeta(quote));
             }
         }
 

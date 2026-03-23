@@ -70,6 +70,14 @@ export async function fetchExchangeRate() {
     return fetchJSON('/exchange-rate');
 }
 
+export async function fetchMacroIndicators() {
+    return fetchJSON('/macros');
+}
+
+export async function fetchNews() {
+    return fetchJSON('/news');
+}
+
 export async function fetchCustomStocks() {
     return fetchJSON('/stocks/custom');
 }

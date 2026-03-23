@@ -2,17 +2,18 @@
  * 종목 카드 컴포넌트
  */
 
-export function createStockCard(stock, onAnalyze) {
+export function createStockCard(stock) {
   // 전일비 기반 상승/하락 판단
   const dailyPct = stock.dailyChangePercent ?? stock.changePercent ?? 0;
   const monthlyPct = stock.monthlyChangePercent ?? null;
-  const isDailyUp = dailyPct >= 0;
-  const direction = isDailyUp ? 'up' : 'down';
+  const isDailyFlat = dailyPct === 0;
+  const isDailyUp = dailyPct > 0;
+  const direction = isDailyFlat ? 'neutral' : (isDailyUp ? 'up' : 'down');
 
   const currency = stock.currency === 'KRW' ? '₩' : '$';
   const priceFormatted = formatPrice(stock.price, stock.currency);
-  const dailyArrow = isDailyUp ? '▲' : '▼';
-  const dailyFormatted = `${dailyArrow} ${Math.abs(dailyPct).toFixed(2)}%`;
+  const dailyArrow = isDailyFlat ? '' : (isDailyUp ? '▲' : '▼');
+  const dailyFormatted = `${dailyArrow ? `${dailyArrow} ` : ''}${Math.abs(dailyPct).toFixed(2)}%`;
 
   // 전월비 포맷
   let monthlyHtml = '';
@@ -60,16 +61,8 @@ export function createStockCard(stock, onAnalyze) {
     <canvas class="stock-sparkline" id="sparkline-${stock.symbol.replace(/[^a-zA-Z0-9]/g, '_')}"></canvas>
     <div class="stock-card-footer">
       <span class="stock-prev-close">전일 ${prevCloseFormatted}</span>
-      <button class="btn-ai-analyze" data-symbol="${stock.symbol}">🤖 AI 분석</button>
     </div>
   `;
-
-  // AI 분석 버튼 이벤트
-  const analyzeBtn = card.querySelector('.btn-ai-analyze');
-  analyzeBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (onAnalyze) onAnalyze(stock);
-  });
 
   return card;
 }

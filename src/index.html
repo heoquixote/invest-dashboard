@@ -30,29 +30,21 @@
                     <span class="nav-icon">🏠</span>
                     <span class="nav-label">대시보드</span>
                 </button>
-                <button class="nav-item" data-view="overseas" id="nav-overseas">
-                    <span class="nav-icon">🌎</span>
-                    <span class="nav-label">해외 주식</span>
-                </button>
-                <button class="nav-item" data-view="korean" id="nav-korean">
-                    <span class="nav-icon">🇰🇷</span>
-                    <span class="nav-label">국내 주식</span>
-                </button>
-                <button class="nav-item" data-view="commodity" id="nav-gold">
-                    <span class="nav-icon">🥇</span>
-                    <span class="nav-label">금 / 원자재</span>
-                </button>
-                <button class="nav-item" data-view="crypto" id="nav-crypto">
-                    <span class="nav-icon">🪙</span>
-                    <span class="nav-label">암호화폐</span>
+                <button class="nav-item" data-view="news" id="nav-news">
+                    <span class="nav-icon">🗞️</span>
+                    <span class="nav-label">시장 뉴스</span>
                 </button>
                 <button class="nav-item" data-view="portfolio" id="nav-portfolio">
                     <span class="nav-icon">💼</span>
                     <span class="nav-label">내 포트폴리오</span>
                 </button>
-                <button class="nav-item" data-view="analysis" id="nav-analysis">
-                    <span class="nav-icon">🤖</span>
-                    <span class="nav-label">AI 분석</span>
+                <button class="nav-item" data-view="history" id="nav-history">
+                    <span class="nav-icon">🧾</span>
+                    <span class="nav-label">히스토리</span>
+                </button>
+                <button class="nav-item" data-view="heatmap" id="nav-heatmap">
+                    <span class="nav-icon">🗺️</span>
+                    <span class="nav-label">히트맵</span>
                 </button>
             </nav>
             <div class="sidebar-footer">
@@ -114,6 +106,7 @@
                     <div class="card-info">
                         <span class="card-label">전체 종목</span>
                         <span class="card-value" id="totalCount">0</span>
+                        <span class="card-change neutral" id="flatCountMeta">보합 0</span>
                     </div>
                 </div>
                 <div class="summary-card" id="cardUp">
@@ -138,11 +131,74 @@
                     </div>
                 </div>
 
+                <div class="summary-card macro-card" id="cardUsdKrw">
+                    <div class="card-icon macro-fx">💱</div>
+                    <div class="card-info">
+                        <span class="card-label card-label-with-info">
+                            <span>USD/KRW</span>
+                            <span class="info-badge" tabindex="0" aria-label="USD/KRW 설명">
+                                i
+                                <span class="info-tooltip">달러 1달러를 사기 위해 필요한 원화 가격입니다. 원화 강세와 약세를 가장 직관적으로 보여주는 환율 지표입니다.</span>
+                            </span>
+                        </span>
+                        <span class="card-value" id="usdKrwValue">-</span>
+                        <span class="card-change" id="usdKrwChange">-</span>
+                    </div>
+                </div>
+                <div class="summary-card macro-card" id="cardUs10Y">
+                    <div class="card-icon macro-rate">🏦</div>
+                    <div class="card-info">
+                        <span class="card-label card-label-with-info">
+                            <span>미국 10Y</span>
+                            <span class="info-badge" tabindex="0" aria-label="미국 10년물 설명">
+                                i
+                                <span class="info-tooltip">미국 10년 만기 국채 금리입니다. 장기 금리와 시장의 성장·인플레이션 기대를 보여주는 대표 지표입니다. 아래 퍼센트는 전일 대비 등락률입니다.</span>
+                            </span>
+                        </span>
+                        <span class="card-value" id="us10yValue">-</span>
+                        <span class="card-change" id="us10yChange">-</span>
+                    </div>
+                </div>
+                <div class="summary-card macro-card" id="cardUs13W">
+                    <div class="card-icon macro-short">⏱️</div>
+                    <div class="card-info">
+                        <span class="card-label card-label-with-info">
+                            <span>미국 13W</span>
+                            <span class="info-badge" tabindex="0" aria-label="미국 13주물 설명">
+                                i
+                                <span class="info-tooltip">미국 13주 만기 단기 국채 금리입니다. 연준 정책금리 기대와 단기 자금 시장 분위기를 빠르게 반영합니다. 아래 퍼센트는 전일 대비 등락률입니다.</span>
+                            </span>
+                        </span>
+                        <span class="card-value" id="us13wValue">-</span>
+                        <span class="card-change" id="us13wChange">-</span>
+                    </div>
+                </div>
+                <div class="summary-card macro-card" id="cardDxy">
+                    <div class="card-icon macro-dollar">💵</div>
+                    <div class="card-info">
+                        <span class="card-label card-label-with-info">
+                            <span>달러 인덱스</span>
+                            <span class="info-badge" tabindex="0" aria-label="달러 인덱스 설명">
+                                i
+                                <span class="info-tooltip">주요 6개 통화 대비 달러 강세를 보여주는 지수입니다. 글로벌 위험자산과 환율 흐름을 볼 때 자주 참고합니다. 아래 퍼센트는 전일 대비 등락률입니다.</span>
+                            </span>
+                        </span>
+                        <span class="card-value" id="dxyValue">-</span>
+                        <span class="card-change" id="dxyChange">-</span>
+                    </div>
+                </div>
+
                 <!-- 시장 지수 카드 -->
                 <div class="summary-card index-card" id="cardSP500">
                     <div class="card-icon index-us">🇺🇸</div>
                     <div class="card-info">
-                        <span class="card-label">S&P 500</span>
+                        <span class="card-label card-label-with-info">
+                            <span>S&P 500</span>
+                            <span class="info-badge" tabindex="0" aria-label="S&P 500 설명">
+                                i
+                                <span class="info-tooltip">미국 대형주 500개를 대표하는 핵심 주가지수입니다. 미국 증시 전체 흐름을 볼 때 가장 많이 참고합니다.</span>
+                            </span>
+                        </span>
                         <span class="card-value" id="sp500Price">-</span>
                         <span class="card-change" id="sp500Change">-</span>
                     </div>
@@ -151,7 +207,13 @@
                 <div class="summary-card index-card" id="cardNASDAQ">
                     <div class="card-icon index-nasdaq">📈</div>
                     <div class="card-info">
-                        <span class="card-label">NASDAQ-100</span>
+                        <span class="card-label card-label-with-info">
+                            <span>NASDAQ-100</span>
+                            <span class="info-badge" tabindex="0" aria-label="NASDAQ-100 설명">
+                                i
+                                <span class="info-tooltip">나스닥 상장 비금융 대형 기술주 중심 100개 종목 지수입니다. 성장주와 기술주 분위기를 빠르게 보여줍니다.</span>
+                            </span>
+                        </span>
                         <span class="card-value" id="nasdaqPrice">-</span>
                         <span class="card-change" id="nasdaqChange">-</span>
                     </div>
@@ -160,7 +222,13 @@
                 <div class="summary-card index-card" id="cardKOSPI">
                     <div class="card-icon index-kr">🇰🇷</div>
                     <div class="card-info">
-                        <span class="card-label">KOSPI</span>
+                        <span class="card-label card-label-with-info">
+                            <span>KOSPI</span>
+                            <span class="info-badge" tabindex="0" aria-label="KOSPI 설명">
+                                i
+                                <span class="info-tooltip">한국거래소 유가증권시장 대표 지수입니다. 삼성전자 같은 대형주 흐름이 크게 반영됩니다.</span>
+                            </span>
+                        </span>
                         <span class="card-value" id="kospiPrice">-</span>
                         <span class="card-change" id="kospiChange">-</span>
                     </div>
@@ -169,7 +237,13 @@
                 <div class="summary-card index-card" id="cardKOSDAQ">
                     <div class="card-icon index-kosdaq">🚀</div>
                     <div class="card-info">
-                        <span class="card-label">KOSDAQ</span>
+                        <span class="card-label card-label-with-info">
+                            <span>KOSDAQ</span>
+                            <span class="info-badge" tabindex="0" aria-label="KOSDAQ 설명">
+                                i
+                                <span class="info-tooltip">국내 성장주와 중소형주 비중이 큰 시장 지수입니다. 기술주와 바이오 섹터의 체감 흐름을 보기 좋습니다.</span>
+                            </span>
+                        </span>
                         <span class="card-value" id="kosdaqPrice">-</span>
                         <span class="card-change" id="kosdaqChange">-</span>
                     </div>
@@ -182,8 +256,10 @@
                 <div class="filter-group">
                     <span class="filter-group-label">시장</span>
                     <button class="filter-tab active" data-filter="all">전체</button>
-                    <button class="filter-tab" data-filter="overseas">🌎 해외</button>
                     <button class="filter-tab" data-filter="korean">🇰🇷 국내</button>
+                    <button class="filter-tab" data-filter="overseas">🌎 해외</button>
+                    <button class="filter-tab" data-filter="etf">📊 ETF</button>
+                    <button class="filter-tab" data-filter="crypto">🪙 코인</button>
                 </div>
                 <div class="filter-divider"></div>
                 <div class="filter-group" id="movementFilters">
@@ -197,30 +273,12 @@
                 <div class="filter-divider"></div>
                 <div class="filter-group" id="categoryFilters">
                     <span class="filter-group-label">카테고리</span>
-                    <button class="category-chip active" data-category="all">전체</button>
-                    <button class="category-chip" data-category="tech">🖥️ 기술주</button>
-                    <button class="category-chip" data-category="semiconductor">💾 반도체</button>
-                    <button class="category-chip" data-category="defense">🛡️ 방산</button>
-                    <button class="category-chip" data-category="energy">⚡ 에너지</button>
-                    <button class="category-chip" data-category="consumer">🛒 소비재</button>
-                    <button class="category-chip" data-category="healthcare">💊 헬스케어</button>
-                    <button class="category-chip" data-category="finance">🏦 금융</button>
-                    <button class="category-chip" data-category="communication">📡 통신</button>
-                    <button class="category-chip" data-category="industrial">🏭 산업재</button>
-                    <button class="category-chip" data-category="ai_data">🤖 AI</button>
-                    <button class="category-chip" data-category="etf_us">📊 해외ETF</button>
-                    <button class="category-chip" data-category="kr_major">🇰🇷 대표</button>
-                    <button class="category-chip" data-category="kr_finance">🏦 금융(KR)</button>
-                    <button class="category-chip" data-category="kr_battery">🔋 2차전지</button>
-                    <button class="category-chip" data-category="kr_defense">🛡️ 방산(KR)</button>
-                    <button class="category-chip" data-category="kr_bio">🧬 바이오</button>
-                    <button class="category-chip" data-category="kr_it">💻 IT(KR)</button>
-                    <button class="category-chip" data-category="kr_heavy">🏗️ 중공업</button>
-                    <button class="category-chip" data-category="kr_consumer">🛒 소비(KR)</button>
-                    <button class="category-chip" data-category="etf_kr">📊 국내ETF</button>
-                    <button class="category-chip" data-category="commodity">🥇 귀금속</button>
-                    <button class="category-chip" data-category="minerals">⛏️ 광물</button>
-                    <button class="category-chip" data-category="crypto">🪙 코인</button>
+                </div>
+                <div class="filter-search" id="filterSearchWrap">
+                    <label class="filter-search-box" for="stockSearchInput">
+                        <span class="filter-search-icon">⌕</span>
+                        <input type="text" id="stockSearchInput" class="filter-search-input" placeholder="종목명 / 심볼 / 코드 검색" autocomplete="off">
+                    </label>
                 </div>
             </div>
 
@@ -230,6 +288,26 @@
                     <div class="loading-placeholder">
                         <div class="spinner"></div>
                         <p>데이터를 불러오는 중...</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="news-section" id="newsSection" style="display:none;">
+                <div class="news-toolbar">
+                    <div class="news-filter-tabs" id="newsFilterTabs">
+                        <button class="news-tab active" data-news-filter="all">전체</button>
+                        <button class="news-tab" data-news-filter="sp500">S&amp;P 500</button>
+                        <button class="news-tab" data-news-filter="korean">국내주식</button>
+                        <button class="news-tab" data-news-filter="overseas">해외주식</button>
+                        <button class="news-tab" data-news-filter="gold">금</button>
+                        <button class="news-tab" data-news-filter="crypto">코인</button>
+                    </div>
+                    <div class="news-meta" id="newsUpdatedAt">뉴스 수집 시각: -</div>
+                </div>
+                <div class="news-grid" id="newsGrid">
+                    <div class="loading-placeholder">
+                        <div class="spinner"></div>
+                        <p>뉴스를 불러오는 중...</p>
                     </div>
                 </div>
             </section>
@@ -255,7 +333,10 @@
                 <div class="portfolio-header">
                     <h2>💼 내 포트폴리오</h2>
                     <div class="portfolio-actions">
-                        <button class="btn-add-stock" id="btnAddStock">+ 종목 추가</button>
+                        <div class="pf-cash-toggle" id="pfCashToggle" role="group" aria-label="원화 포함 여부">
+                            <button class="pf-cash-toggle-btn active" id="pfCashIncludeBtn" type="button" data-cash-toggle="include">원화 포함</button>
+                            <button class="pf-cash-toggle-btn" id="pfCashExcludeBtn" type="button" data-cash-toggle="exclude">원화 제외</button>
+                        </div>
                     </div>
                 </div>
 
@@ -277,6 +358,21 @@
                     <div class="pf-summary-card">
                         <span class="pf-summary-label">💱 환율 (USD/KRW)</span>
                         <span class="pf-summary-value" id="pfExchangeRate">₩1,350</span>
+                    </div>
+                </div>
+
+                <div class="pf-allocation-card" id="pfAllocationCard">
+                    <div class="pf-allocation-header">
+                        <div class="pf-allocation-title-wrap">
+                            <h3>구성 비율</h3>
+                            <span class="pf-allocation-sub">평가금 기준</span>
+                        </div>
+                    </div>
+                    <div class="pf-allocation-content">
+                        <div class="pf-allocation-chart-wrap">
+                            <canvas id="pfAllocationChart"></canvas>
+                        </div>
+                        <div class="pf-allocation-legend" id="pfAllocationLegend"></div>
                     </div>
                 </div>
 
@@ -304,6 +400,7 @@
                             <select class="add-stock-market" id="addStockMarket">
                                 <option value="overseas">🌎 해외(USD)</option>
                                 <option value="korean">🇰🇷 국내(KRW)</option>
+                                <option value="cash_usd">💵 달러 현금(USD)</option>
                             </select>
                         </div>
                         <div class="add-form-actions">
@@ -317,8 +414,25 @@
                 <div class="portfolio-stocks" id="portfolioStocks">
                     <div class="portfolio-empty">
                         <span class="portfolio-empty-icon">📂</span>
-                        <p>포트폴리오가 비어 있습니다.<br>"+ 종목 추가" 버튼으로 관심 종목을 추가해보세요.</p>
+                        <p>포트폴리오가 비어 있습니다.</p>
                     </div>
+                </div>
+            </section>
+
+            <section class="history-section" id="historySection" style="display:none;">
+                <div class="history-content" id="historyContent">
+                    <div class="loading-placeholder">
+                        <div class="spinner"></div>
+                        <p>히스토리를 준비하는 중...</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="heatmap-section" id="heatmapSection" style="display:none;">
+                <div class="heatmap-link-only">
+                    <a class="heatmap-open-btn" href="https://finviz.com/map.ashx" target="_blank" rel="noopener noreferrer">
+                        Finviz 열기
+                    </a>
                 </div>
             </section>
 
@@ -326,12 +440,11 @@
             <section class="analysis-section" id="analysisSection" style="display:none;">
                 <div class="analysis-header">
                     <h2>🤖 AI 투자 분석</h2>
-                    <button class="btn-analyze-all" id="btnAnalyzeAll">전체 포트폴리오 분석</button>
                 </div>
                 <div class="analysis-content" id="analysisContent">
                     <div class="analysis-empty">
                         <span class="analysis-empty-icon">🔍</span>
-                        <p>종목 카드에서 "AI 분석" 버튼을 클릭하거나<br>전체 포트폴리오 분석을 실행해주세요.</p>
+                        <p>AI 분석 결과가 여기에 표시됩니다.</p>
                     </div>
                 </div>
             </section>
@@ -374,10 +487,6 @@
                         <span class="modal-metric-label">전월비</span>
                         <span class="modal-metric-value" id="modalMonthly">-</span>
                     </div>
-                </div>
-                <div class="modal-analysis" id="modalAnalysis">
-                    <button class="btn-analyze" id="btnAnalyzeModal">🤖 AI 분석 실행</button>
-                    <div class="analysis-result" id="modalAnalysisResult"></div>
                 </div>
             </div>
         </div>

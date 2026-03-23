@@ -138,6 +138,9 @@ const sheetMeta = {
     },
     '수집이력': {
         headers: ['날짜', '시간', '해외주식수', '국내주식수', '원자재수']
+    },
+    '시장뉴스': {
+        headers: ['카테고리', '제목', '링크', '출처', '게시시각', '요약']
     }
 };
 
@@ -163,6 +166,7 @@ export default {
     setupStorage,
     appendRows,
     readSheet,
+    writeSheet,
     getLatestData,
     getHistoryData,
     ensureDataDir

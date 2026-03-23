@@ -3,6 +3,7 @@
  */
 let currentChart = null;
 let modalChartInstance = null;
+let portfolioAllocationChartInstance = null;
 
 const chartDefaultConfig = {
     responsive: true,
@@ -165,4 +166,66 @@ export function renderModalChart(canvasId, historyData, label = '가격') {
 export function destroyCharts() {
     if (currentChart) { currentChart.destroy(); currentChart = null; }
     if (modalChartInstance) { modalChartInstance.destroy(); modalChartInstance = null; }
+    if (portfolioAllocationChartInstance) { portfolioAllocationChartInstance.destroy(); portfolioAllocationChartInstance = null; }
+}
+
+export function renderPortfolioAllocationChart(canvasId, items = [], options = {}) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return null;
+
+    if (portfolioAllocationChartInstance) {
+        portfolioAllocationChartInstance.destroy();
+        portfolioAllocationChartInstance = null;
+    }
+
+    if (!items.length) return null;
+
+    const ctx = canvas.getContext('2d');
+    const { activeKey = 'all', onSliceClick } = options;
+
+    portfolioAllocationChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: items.map(item => item.label),
+            datasets: [{
+                data: items.map(item => item.value),
+                backgroundColor: items.map(item => item.color || '#64748b'),
+                borderColor: items.map(item => activeKey === 'all' || item.key === activeKey ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.02)'),
+                borderWidth: items.map(item => activeKey === 'all' || item.key === activeKey ? 2 : 1),
+                hoverOffset: 8,
+                offset: items.map(item => activeKey === 'all' ? 0 : (item.key === activeKey ? 14 : 0))
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            onClick: (_, elements) => {
+                if (!elements.length || typeof onSliceClick !== 'function') return;
+                const index = elements[0].index;
+                const item = items[index];
+                if (item) onSliceClick(item.key);
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                    titleColor: '#f1f5f9',
+                    bodyColor: '#cbd5e1',
+                    borderColor: 'rgba(99, 102, 241, 0.2)',
+                    borderWidth: 1,
+                    callbacks: {
+                        label(context) {
+                            const total = items.reduce((sum, item) => sum + item.value, 0) || 1;
+                            const value = context.parsed || 0;
+                            const pct = (value / total) * 100;
+                            return ` ₩${Math.round(value).toLocaleString()} (${pct.toFixed(1)}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    return portfolioAllocationChartInstance;
 }

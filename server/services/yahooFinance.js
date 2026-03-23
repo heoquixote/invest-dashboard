@@ -38,6 +38,7 @@ const STOCK_THEMES = {
             { symbol: 'LRCX', name: 'Lam Research', gFinance: 'LRCX:NASDAQ' },
             { symbol: 'AMAT', name: 'Applied Materials', gFinance: 'AMAT:NASDAQ' },
             { symbol: 'KLAC', name: 'KLA Corp', gFinance: 'KLAC:NASDAQ' },
+            { symbol: 'SNDK', name: 'SanDisk', gFinance: 'SNDK:NASDAQ' },
         ]
     },
     defense: {
@@ -69,6 +70,7 @@ const STOCK_THEMES = {
         id: 'consumer', name: '🛒 소비재 (Consumer)', market: 'overseas',
         stocks: [
             { symbol: 'AMZN', name: 'Amazon', gFinance: 'AMZN:NASDAQ' },
+            { symbol: 'ABNB', name: 'Airbnb', gFinance: 'ABNB:NASDAQ' },
             { symbol: 'WMT', name: 'Walmart', gFinance: 'WMT:NYSE' },
             { symbol: 'PG', name: 'Procter & Gamble', gFinance: 'PG:NYSE' },
             { symbol: 'KO', name: 'Coca-Cola', gFinance: 'KO:NYSE' },
@@ -85,7 +87,6 @@ const STOCK_THEMES = {
         stocks: [
             { symbol: 'UNH', name: 'UnitedHealth', gFinance: 'UNH:NYSE' },
             { symbol: 'JNJ', name: 'Johnson & Johnson', gFinance: 'JNJ:NYSE' },
-            { symbol: 'LLY', name: 'Eli Lilly', gFinance: 'LLY:NYSE' },
             { symbol: 'ABBV', name: 'AbbVie', gFinance: 'ABBV:NYSE' },
             { symbol: 'PFE', name: 'Pfizer', gFinance: 'PFE:NYSE' },
             { symbol: 'MRK', name: 'Merck', gFinance: 'MRK:NYSE' },
@@ -93,6 +94,13 @@ const STOCK_THEMES = {
             { symbol: 'ABT', name: 'Abbott Labs', gFinance: 'ABT:NYSE' },
             { symbol: 'ISRG', name: 'Intuitive Surgical', gFinance: 'ISRG:NASDAQ' },
             { symbol: 'REGN', name: 'Regeneron', gFinance: 'REGN:NASDAQ' },
+        ]
+    },
+    obesity_drug: {
+        id: 'obesity_drug', name: '💉 비만 치료제/의약', market: 'overseas',
+        stocks: [
+            { symbol: 'LLY', name: 'Eli Lilly', gFinance: 'LLY:NYSE' },
+            { symbol: 'NVO', name: 'Novo Nordisk', gFinance: 'NVO:NYSE' },
         ]
     },
     finance: {
@@ -114,6 +122,7 @@ const STOCK_THEMES = {
         id: 'communication', name: '📡 통신/미디어 (Comm)', market: 'overseas',
         stocks: [
             { symbol: 'NFLX', name: 'Netflix', gFinance: 'NFLX:NASDAQ' },
+            { symbol: 'RBLX', name: 'Roblox', gFinance: 'RBLX:NYSE' },
             { symbol: 'T', name: 'AT&T', gFinance: 'T:NYSE' },
             { symbol: 'VZ', name: 'Verizon', gFinance: 'VZ:NYSE' },
             { symbol: 'TMUS', name: 'T-Mobile', gFinance: 'TMUS:NASDAQ' },
@@ -230,10 +239,18 @@ const STOCK_THEMES = {
             { symbol: '263750.KS', name: '펄어비스', korCode: '263750', gFinance: '263750:KRX' },
             { symbol: '259960.KS', name: '크래프톤', korCode: '259960', gFinance: '259960:KRX' },
             { symbol: '036570.KS', name: '엔씨소프트', korCode: '036570', gFinance: '036570:KRX' },
-            { symbol: '352820.KS', name: '하이브', korCode: '352820', gFinance: '352820:KRX' },
             { symbol: '030200.KS', name: 'KT', korCode: '030200', gFinance: '030200:KRX' },
             { symbol: '017670.KS', name: 'SK텔레콤', korCode: '017670', gFinance: '017670:KRX' },
             { symbol: '066570.KS', name: 'LG전자', korCode: '066570', gFinance: '066570:KRX' },
+        ]
+    },
+    kr_entertainment: {
+        id: 'kr_entertainment', name: '🎤 국내 엔터', market: 'korean',
+        stocks: [
+            { symbol: '352820.KS', name: '하이브', korCode: '352820', gFinance: '352820:KRX' },
+            { symbol: '035900.KQ', name: 'JYP Ent.', korCode: '035900', gFinance: '035900:KOSDAQ' },
+            { symbol: '122870.KQ', name: 'YG Entertainment', korCode: '122870', gFinance: '122870:KOSDAQ' },
+            { symbol: '041510.KQ', name: 'SM Entertainment', korCode: '041510', gFinance: '041510:KOSDAQ' },
         ]
     },
     kr_heavy: {
@@ -273,6 +290,7 @@ const STOCK_THEMES = {
             { symbol: '371460.KS', name: 'TIGER 차이나전기차', korCode: '371460', gFinance: '371460:KRX' },
             { symbol: '453810.KS', name: 'KODEX 미국AI테크TOP10', korCode: '453810', gFinance: '453810:KRX' },
             { symbol: '448290.KS', name: 'TIGER 미국S&P500(H)', korCode: '448290', gFinance: '448290:KRX' },
+            { symbol: '411060.KS', name: 'ACE KRX금현물', korCode: '411060', gFinance: '411060:KRX' },
         ]
     },
 
@@ -349,6 +367,42 @@ const YAHOO_HEADERS = {
     'Referer': 'https://finance.yahoo.com/',
     'Origin': 'https://finance.yahoo.com'
 };
+
+function formatSeoulDate(date) {
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Seoul',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+    return formatter.format(date);
+}
+
+function getDailyReferenceDate() {
+    const now = new Date();
+    const weekday = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Seoul',
+        weekday: 'short'
+    }).format(now);
+
+    const offsetDays = weekday === 'Mon' ? 3 : 1;
+    const referenceDate = new Date(now);
+    referenceDate.setDate(referenceDate.getDate() - offsetDays);
+    return formatSeoulDate(referenceDate);
+}
+
+function pickPreviousClose(historyRows) {
+    if (!historyRows.length) return null;
+
+    const targetDate = getDailyReferenceDate();
+    const exactMatch = historyRows.find(row => row.date === targetDate);
+    if (exactMatch?.close > 0) {
+        return exactMatch.close;
+    }
+
+    const fallback = historyRows.find(row => row.date < targetDate && row.close > 0);
+    return fallback?.close || null;
+}
 
 /**
  * Yahoo Finance v8 API로 시세 조회 (직접 HTTP)
@@ -531,14 +585,9 @@ async function getQuote(symbol) {
  * Google Finance 변동 데이터를 전일비로, Yahoo 1mo 히스토리로 전월비 계산
  * + 최근 7일 종가 히스토리를 스파크라인용으로 추출
  */
-async function enrichWithComparisons(quote) {
+async function enrichWithComparisons(quote, options = {}) {
     if (!quote || !quote.price) return quote;
-
-    // Google Finance에서 이미 가져온 change 데이터를 전일비로 사용
-    if (quote.change !== undefined) {
-        quote.dailyChange = quote.change || 0;
-        quote.dailyChangePercent = quote.changePercent || 0;
-    }
+    const { useTradingDayReference = true } = options;
 
     // 전월비: Yahoo v8 chart API로 1mo 히스토리 시도
     try {
@@ -549,7 +598,13 @@ async function enrichWithComparisons(quote) {
             const data = await res.json();
             const result = data?.chart?.result?.[0];
             if (result) {
-                const closes = result.indicators?.quote?.[0]?.close?.filter(c => c != null) || [];
+                const timestamps = result.timestamp || [];
+                const quoteData = result.indicators?.quote?.[0] || {};
+                const historyRows = timestamps.map((ts, index) => ({
+                    date: formatSeoulDate(new Date(ts * 1000)),
+                    close: quoteData.close?.[index]
+                })).filter(row => row.close != null);
+                const closes = historyRows.map(row => row.close).filter(close => close != null);
 
                 if (closes.length >= 5) {
                     const monthAgoClose = closes[0];
@@ -560,13 +615,20 @@ async function enrichWithComparisons(quote) {
                     }
                 }
 
-                // Yahoo 데이터로 전일비도 보강 (Google이 0일 경우)
-                if ((!quote.dailyChangePercent || quote.dailyChangePercent === 0) && closes.length >= 2) {
-                    const prevDayClose = closes[closes.length - 2];
-                    if (prevDayClose > 0) {
-                        quote.dailyChange = quote.price - prevDayClose;
-                        quote.dailyChangePercent = ((quote.price - prevDayClose) / prevDayClose) * 100;
-                    }
+                // 전일비는 요일 규칙에 맞는 기준 종가로 강제 계산
+                const previousClose = useTradingDayReference
+                    ? pickPreviousClose(historyRows)
+                    : null;
+
+                if (previousClose && previousClose > 0) {
+                    quote.previousClose = previousClose;
+                    quote.dailyChange = quote.price - previousClose;
+                    quote.dailyChangePercent = ((quote.price - previousClose) / previousClose) * 100;
+                    quote.change = quote.dailyChange;
+                    quote.changePercent = quote.dailyChangePercent;
+                } else if (quote.change !== undefined) {
+                    quote.dailyChange = quote.change || 0;
+                    quote.dailyChangePercent = quote.changePercent || 0;
                 }
 
                 // 스파크라인용 최근 7일 종가 히스토리 추출
@@ -577,7 +639,11 @@ async function enrichWithComparisons(quote) {
             }
         }
     } catch (e) {
-        // Yahoo 히스토리 실패 시 무시 - Google 전일비만 사용
+        // Yahoo 히스토리 실패 시 Google/기존 change 값 사용
+        if (quote.change !== undefined) {
+            quote.dailyChange = quote.change || 0;
+            quote.dailyChangePercent = quote.changePercent || 0;
+        }
     }
 
     return quote;
@@ -598,7 +664,10 @@ async function getStocksByTheme(themeId) {
             quote.theme = themeId;
             quote.themeName = theme.name;
             if (stock.korCode) quote.korCode = stock.korCode;
-            quote = await enrichWithComparisons(quote);
+            attachFinanceLinkMeta(quote, stock);
+            quote = await enrichWithComparisons(quote, {
+                useTradingDayReference: theme.market !== 'crypto'
+            });
             results.push(quote);
         }
         await delay(200);
@@ -619,7 +688,10 @@ async function getOverseasStocks() {
                 quote.name = stock.name;
                 quote.theme = theme.id;
                 quote.themeName = theme.name;
-                quote = await enrichWithComparisons(quote);
+                attachFinanceLinkMeta(quote, stock);
+                quote = await enrichWithComparisons(quote, {
+                    useTradingDayReference: true
+                });
                 results.push(quote);
             }
             await delay(200);
@@ -642,7 +714,10 @@ async function getKoreanStocks() {
                 quote.korCode = stock.korCode;
                 quote.theme = theme.id;
                 quote.themeName = theme.name;
-                quote = await enrichWithComparisons(quote);
+                attachFinanceLinkMeta(quote, stock);
+                quote = await enrichWithComparisons(quote, {
+                    useTradingDayReference: true
+                });
                 results.push(quote);
             }
             await delay(200);
@@ -664,7 +739,10 @@ async function getCommodities() {
                 quote.name = item.name;
                 quote.theme = theme.id;
                 quote.themeName = theme.name;
-                quote = await enrichWithComparisons(quote);
+                attachFinanceLinkMeta(quote, item);
+                quote = await enrichWithComparisons(quote, {
+                    useTradingDayReference: true
+                });
                 results.push(quote);
             }
             await delay(200);
@@ -710,7 +788,10 @@ async function getCrypto() {
                 quote.name = item.name;
                 quote.theme = theme.id;
                 quote.themeName = theme.name;
-                quote = await enrichWithComparisons(quote);
+                attachFinanceLinkMeta(quote, item);
+                quote = await enrichWithComparisons(quote, {
+                    useTradingDayReference: false
+                });
                 results.push(quote);
             }
             await delay(200);
@@ -801,6 +882,21 @@ function generateSimulatedHistory(currentPrice, period) {
 
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function attachFinanceLinkMeta(quote, stock) {
+    if (!quote || !stock) return;
+
+    if (stock.korCode) {
+        quote.externalProvider = 'naver';
+        quote.externalUrl = `https://finance.naver.com/item/main.naver?code=${stock.korCode}`;
+        return;
+    }
+
+    if (stock.gFinance) {
+        quote.externalProvider = 'google';
+        quote.externalUrl = `https://www.google.com/finance/quote/${encodeURIComponent(stock.gFinance)}`;
+    }
 }
 
 export default {

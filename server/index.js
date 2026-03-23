@@ -7,6 +7,7 @@ import stocksRouter from './routes/stocks.js';
 import goldRouter from './routes/gold.js';
 import cryptoRouter from './routes/crypto.js';
 import analysisRouter from './routes/analysis.js';
+import newsRouter from './routes/news.js';
 import storage from './services/localStorage.js';
 import collector from './services/collector.js';
 import llmService from './services/llmService.js';
@@ -15,16 +16,66 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const YAHOO_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+    'Accept': 'application/json',
+};
 
 // 미들웨어
 app.use(cors());
 app.use(express.json());
+
+async function fetchYahooChartSnapshot(symbol, range = '1mo') {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=${range}`;
+    const fetchRes = await fetch(url, { headers: YAHOO_HEADERS });
+    if (!fetchRes.ok) {
+        throw new Error(`HTTP ${fetchRes.status}`);
+    }
+
+    const data = await fetchRes.json();
+    const result = data?.chart?.result?.[0];
+    if (!result) {
+        throw new Error('No data');
+    }
+
+    const meta = result.meta || {};
+    const prevClose = meta.chartPreviousClose || meta.previousClose || 0;
+    const price = meta.regularMarketPrice ?? null;
+    const quote = result.indicators?.quote?.[0];
+    const closes = quote?.close?.filter(value => value != null) || [];
+
+    return {
+        price,
+        previousClose: prevClose,
+        changePercent: prevClose && price != null ? ((price - prevClose) / prevClose) * 100 : 0,
+        history: closes.map(close => ({ close }))
+    };
+}
+
+async function fetchUsdKrwFromGoogle() {
+    const fxUrl = 'https://www.google.com/finance/quote/USD-KRW';
+    const response = await fetch(fxUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
+
+    const html = await response.text();
+    const priceMatch = html.match(/data-last-price="([^"]+)"/);
+    if (!priceMatch) {
+        throw new Error('No FX price');
+    }
+
+    return parseFloat(priceMatch[1]);
+}
 
 // 라우트
 app.use('/api/stocks', stocksRouter);
 app.use('/api/gold', goldRouter);
 app.use('/api/crypto', cryptoRouter);
 app.use('/api/analysis', analysisRouter);
+app.use('/api/news', newsRouter);
 
 // 헬스 체크
 app.get('/api/health', (req, res) => {
@@ -72,42 +123,20 @@ app.get('/api/indices', async (req, res) => {
             { symbol: '^KQ11', name: 'KOSDAQ', emoji: '🚀' }
         ];
 
-        const YAHOO_HEADERS = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-            'Accept': 'application/json',
-        };
-
         const results = await Promise.all(
             indices.map(async (idx) => {
                 try {
-                    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(idx.symbol)}?interval=1d&range=1mo`;
-                    const fetchRes = await fetch(url, { headers: YAHOO_HEADERS });
-                    if (!fetchRes.ok) throw new Error(`HTTP ${fetchRes.status}`);
-
-                    const data = await fetchRes.json();
-                    const result = data?.chart?.result?.[0];
-                    if (!result) throw new Error('No data');
-
-                    const meta = result.meta;
-                    const prevClose = meta.chartPreviousClose || meta.previousClose || 0;
-                    const price = meta.regularMarketPrice || 0;
-                    const change = price - prevClose;
-                    const changePercent = prevClose ? (change / prevClose) * 100 : 0;
-
-                    // 스파크라인용 히스토리 추출
-                    const quote = result.indicators?.quote?.[0];
-                    const closes = quote?.close?.filter(c => c != null) || [];
-                    const history = closes.map(c => ({ close: c }));
+                    const snapshot = await fetchYahooChartSnapshot(idx.symbol, '1mo');
 
                     return {
                         symbol: idx.symbol,
                         name: idx.name,
                         emoji: idx.emoji,
-                        price,
-                        changePercent,
-                        previousClose: prevClose,
-                        currency: meta.currency || 'USD',
-                        history
+                        price: snapshot.price,
+                        changePercent: snapshot.changePercent,
+                        previousClose: snapshot.previousClose,
+                        currency: idx.symbol.startsWith('^K') ? 'KRW' : 'USD',
+                        history: snapshot.history
                     };
                 } catch (e) {
                     console.error(`지수 조회 실패 (${idx.symbol}):`, e.message);
@@ -123,12 +152,98 @@ app.get('/api/indices', async (req, res) => {
     }
 });
 
+// 매크로 지표 조회 (환율/금리/달러)
+app.get('/api/macros', async (req, res) => {
+    try {
+        const macroDefs = [
+            { key: 'US10Y', symbol: '^TNX', name: '미국 10Y', emoji: '🏦', format: 'percent', divisor: 10 },
+            { key: 'US13W', symbol: '^IRX', name: '미국 13W', emoji: '⏱️', format: 'percent', divisor: 10 },
+            { key: 'DXY', symbol: 'DX-Y.NYB', name: '달러 인덱스', emoji: '💵', format: 'number' }
+        ];
+
+        const macroResults = await Promise.all(
+            macroDefs.map(async (macro) => {
+                try {
+                    const snapshot = await fetchYahooChartSnapshot(macro.symbol, '1mo');
+                    const value = snapshot.price != null ? snapshot.price / (macro.divisor || 1) : null;
+                    return {
+                        key: macro.key,
+                        symbol: macro.symbol,
+                        name: macro.name,
+                        emoji: macro.emoji,
+                        value,
+                        changePercent: snapshot.changePercent,
+                        format: macro.format
+                    };
+                } catch (error) {
+                    console.error(`매크로 조회 실패 (${macro.symbol}):`, error.message);
+                    return {
+                        key: macro.key,
+                        symbol: macro.symbol,
+                        name: macro.name,
+                        emoji: macro.emoji,
+                        value: null,
+                        changePercent: 0,
+                        format: macro.format
+                    };
+                }
+            })
+        );
+
+        let usdKrw = null;
+        try {
+            usdKrw = await fetchUsdKrwFromGoogle();
+        } catch (error) {
+            console.error('USD/KRW 조회 실패:', error.message);
+            const fallback = collector.getLatestData().commodities?.[0]?.usdKrw;
+            usdKrw = fallback || null;
+        }
+
+        res.json({
+            success: true,
+            data: [
+                {
+                    key: 'USD/KRW',
+                    symbol: 'USD-KRW',
+                    name: 'USD/KRW',
+                    emoji: '💱',
+                    value: usdKrw,
+                    changePercent: null,
+                    format: 'krw'
+                },
+                ...macroResults
+            ]
+        });
+    } catch (error) {
+        console.error('매크로 지표 API 오류:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // 환율 조회
-app.get('/api/exchange-rate', (req, res) => {
-    const data = collector.getLatestData();
-    const gold = data.commodities?.[0];
-    const usdKrw = gold?.usdKrw || 1350;
-    res.json({ success: true, data: { usdKrw, updatedAt: new Date().toISOString() } });
+app.get('/api/exchange-rate', async (req, res) => {
+    try {
+        let usdKrw = null;
+        try {
+            usdKrw = await fetchUsdKrwFromGoogle();
+        } catch (error) {
+            console.error('exchange-rate USD/KRW 조회 실패:', error.message);
+            const data = collector.getLatestData();
+            const gold = data.commodities?.[0];
+            usdKrw = gold?.usdKrw || 1350;
+        }
+
+        res.json({
+            success: true,
+            data: {
+                usdKrw,
+                updatedAt: new Date().toISOString()
+            }
+        });
+    } catch (error) {
+        console.error('환율 API 오류:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
 });
 
 // 서버 시작
@@ -138,20 +253,13 @@ async function startServer() {
     // 1. 로컬 파일 스토리지 초기화
     storage.setupStorage();
 
-    // 2. Gemini LLM 초기화
+    // 2. 저장된 로컬 캐시를 메모리로 복원
+    collector.hydrateLatestDataFromStorage();
+
+    // 3. Gemini LLM 초기화
     llmService.initLLM();
 
-    // 3. 초기 데이터 수집
-    console.log('\n📡 초기 데이터 수집 중...');
-    await collector.runCollection();
-
-    // 4. 매일 오전 9시 자동 수집 (전일 종가 업데이트)
-    cron.schedule('0 9 * * *', async () => {
-        console.log('\n⏰ [오전 9시] 전일 종가 데이터 수집 시작...');
-        await collector.runCollection();
-    }, { timezone: 'Asia/Seoul' });
-
-    // 5. 서버 리스닝
+    // 4. 서버 리스닝을 먼저 시작
     app.listen(PORT, () => {
         console.log(`\n✅ 서버 실행 중: http://localhost:${PORT}`);
         console.log('📊 API 엔드포인트:');
@@ -159,11 +267,24 @@ async function startServer() {
         console.log(`   GET  http://localhost:${PORT}/api/stocks/korean`);
         console.log(`   GET  http://localhost:${PORT}/api/gold`);
         console.log(`   GET  http://localhost:${PORT}/api/crypto`);
+        console.log(`   GET  http://localhost:${PORT}/api/news`);
         console.log(`   POST http://localhost:${PORT}/api/analysis/:symbol`);
         console.log(`   POST http://localhost:${PORT}/api/analysis/portfolio/all`);
         console.log(`   POST http://localhost:${PORT}/api/collect`);
-        console.log(`\n🔄 자동 수집: 30분 간격\n`);
+        console.log(`\n🔄 자동 수집: 매일 오전 9시 (전일 종가 + 뉴스)\n`);
     });
+
+    // 5. 초기 데이터 수집은 백그라운드에서 실행
+    console.log('\n📡 초기 데이터 수집 시작 (백그라운드)...');
+    collector.runCollection().catch((error) => {
+        console.error('초기 데이터 수집 실패:', error.message);
+    });
+
+    // 6. 매일 오전 9시 자동 수집 (전일 종가 업데이트)
+    cron.schedule('0 9 * * *', async () => {
+        console.log('\n⏰ [오전 9시] 전일 종가 데이터 수집 시작...');
+        await collector.runCollection();
+    }, { timezone: 'Asia/Seoul' });
 }
 
 startServer().catch(console.error);
