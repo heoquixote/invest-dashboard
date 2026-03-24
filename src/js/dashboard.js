@@ -6,66 +6,15 @@ import { createStockCard, drawSparkline } from './stockCard.js';
 import { renderPriceChart, renderModalChart, renderPortfolioAllocationChart } from './charts.js';
 import { createAnalysisCard, createPortfolioAnalysis } from './analysisPanel.js';
 
-let currentView = 'all'; // all, news, portfolio, history, heatmap
+let currentView = 'all'; // all, news, portfolio, history, strategy, heatmap
 let currentMarketFilter = 'all'; // all, korean, overseas, etf, crypto
 let currentCategoryFilter = 'all'; // all, tech, defense, energy, consumer, finance, ai_data, kr_major, kr_theme, commodity
 let currentMovementFilter = 'all'; // all, up, down, spike, crash
+let currentFavoriteFilter = 'all'; // all, favorites
 let currentSearchQuery = '';
 let currentNewsFilter = 'all';
 let includeCashInAllocation = true;
 let currentPortfolioAllocationFilter = 'all';
-const HISTORY_ASSETS = [
-    {
-        id: 'karis',
-        name: '카리스',
-        market: '비상장 주식',
-        historyType: 'trade',
-        note: '사용자 수기 입력 거래 히스토리',
-        transactions: [
-            { type: 'buy', date: '2020-06-01', shares: 100, price: 6850, amount: 685000 },
-            { type: 'sell', date: '2020-07-20', shares: 100, price: 6800, amount: 680000 },
-            { type: 'buy', date: '2020-11-25', shares: 100, price: 7400, amount: 740000 },
-            { type: 'buy', date: '2020-12-09', shares: 160, price: 7000, amount: 1120000 },
-            { type: 'buy', date: '2021-06-07', shares: 100, price: 6000, amount: 600000 },
-            { type: 'sell', date: '2022-03-15', shares: 120, price: 1900, amount: 228000 },
-            { type: 'sell', date: '2022-04-01', shares: 200, price: 1590, amount: 318000 }
-        ]
-    },
-    {
-        id: 'overseas-account',
-        name: '해외주식 히스토리',
-        market: '해외주식 계좌',
-        historyType: 'cashflow',
-        note: '해외주식 계좌 입출금 내역과 잔고 메모',
-        transactions: [
-            { type: 'deposit', date: '2020-09-01', amount: 8000000, balance: 8000000 },
-            { type: 'withdrawal', date: '2020-09-04', amount: 1402, balance: 7998598 },
-            { type: 'deposit', date: '2020-09-04', amount: 1666902, balance: 9665500 },
-            { type: 'deposit', date: '2020-09-14', amount: 5000003, balance: 14665503 },
-            { type: 'withdrawal', date: '2020-11-16', amount: 9949, balance: 14655554 },
-            { type: 'deposit', date: '2020-12-22', amount: 5999996, balance: 20655550 },
-            { type: 'deposit', date: '2020-12-29', amount: 2863643, balance: 23519193 },
-            { type: 'deposit', date: '2021-01-14', amount: 1000000, balance: 24519193 },
-            { type: 'deposit', date: '2021-01-19', amount: 2282796, balance: 26801989 },
-            { type: 'deposit', date: '2021-03-16', amount: 1000000, balance: 27801989 },
-            { type: 'deposit', date: '2021-03-31', amount: 1500000, balance: 29301989 },
-            { type: 'withdrawal', date: '2021-07-16', amount: 6892, balance: 29295097 },
-            { type: 'withdrawal', date: '2021-07-16', amount: 7797333, balance: 21497764 },
-            { type: 'withdrawal', date: '2021-11-15', amount: 3131405, balance: 18366359 },
-            { type: 'withdrawal', date: '2021-11-16', amount: 299500, balance: 18066859 },
-            { type: 'withdrawal', date: '2021-11-16', amount: 2669500, balance: 15397359 },
-            { type: 'withdrawal', date: '2025-01-28', amount: 2442702, balance: 12954657 }
-        ],
-        balanceSnapshots: [
-            { label: '현재 잔고', date: '2024-09-26', value: 5934209 },
-            { label: '현재 잔고', date: '2024-11-14', value: 7811865 }
-        ],
-        holdings: [
-            { label: '금', value: 3414988 },
-            { label: '세일즈포스', value: 2867169 }
-        ]
-    }
-];
 const MARKET_CATEGORY_CONFIG = {
     all: [
         { id: 'all', label: '전체' }
@@ -116,6 +65,10 @@ const state = {
     crypto: [],
     news: { updatedAt: null, categories: [], items: {} },
     custom: [],
+    privateHistory: [],
+    favorites: JSON.parse(localStorage.getItem('favoriteStocks') || '[]'),
+    strategyMemo: localStorage.getItem('strategyMemo') || '',
+    strategyMemoSavedAt: localStorage.getItem('strategyMemoSavedAt') || '',
     portfolio: JSON.parse(localStorage.getItem('portfolio') || '[]'),
     loading: false
 };
@@ -128,6 +81,7 @@ export async function initDashboard() {
     setupFilterTabs();
     setupCategoryFilters();
     setupMovementFilters();
+    setupFavoriteFilters();
     setupSummaryCardFilters();
     setupSearchFilter();
     setupNewsFilters();
@@ -135,6 +89,7 @@ export async function initDashboard() {
     setupHeaderButtons();
     setupPortfolio();
     setupCustomStockModal();
+    setupStrategyMemo();
     renderCategoryChips();
     await loadAllData();
     checkHealth();
@@ -148,13 +103,14 @@ async function loadAllData() {
     updateLoadingUI(true);
 
     try {
-        const [overseas, korean, gold, crypto, custom, news] = await Promise.all([
+        const [overseas, korean, gold, crypto, custom, news, privateHistory] = await Promise.all([
             api.fetchOverseasStocks().catch(() => ({ data: [] })),
             api.fetchKoreanStocks().catch(() => ({ data: [] })),
             api.fetchGold().catch(() => ({ data: [] })),
             api.fetchCrypto().catch(() => ({ data: [] })),
             api.fetchCustomStocks().catch(() => ({ data: [] })),
-            api.fetchNews().catch(() => ({ data: { updatedAt: null, categories: [], items: {} } }))
+            api.fetchNews().catch(() => ({ data: { updatedAt: null, categories: [], items: {} } })),
+            api.fetchPrivateHistory().catch(() => ({ data: [] }))
         ]);
 
         state.overseas = overseas.data || [];
@@ -163,6 +119,7 @@ async function loadAllData() {
         state.crypto = crypto.data || [];
         state.news = news.data || { updatedAt: null, categories: [], items: {} };
         state.custom = custom.data || [];
+        state.privateHistory = privateHistory.data || [];
 
         renderCurrentView();
         updateSummaryCards();
@@ -194,11 +151,15 @@ async function updateSummaryCards() {
     const downEl = document.getElementById('downCount');
     const coverageEl = document.getElementById('coverageCount');
     const flatMetaEl = document.getElementById('flatCountMeta');
+    const upBreakdownEl = document.getElementById('upBreakdown');
+    const downBreakdownEl = document.getElementById('downBreakdown');
 
     if (totalEl) totalEl.textContent = all.length;
     if (upEl) upEl.textContent = upCount;
     if (downEl) downEl.textContent = downCount;
     if (flatMetaEl) flatMetaEl.textContent = `보합 ${flatCount}`;
+    if (upBreakdownEl) upBreakdownEl.textContent = formatMovementBreakdown(all, 'up');
+    if (downBreakdownEl) downBreakdownEl.textContent = formatMovementBreakdown(all, 'down');
     if (coverageEl) {
         coverageEl.textContent = `${withPrice}/${all.length}`;
         coverageEl.title = `종가 기준 ${withPrice}개 종목 수집 완료`;
@@ -215,7 +176,8 @@ async function updateSummaryCards() {
             'USD/KRW': { valueId: 'usdKrwValue', changeId: 'usdKrwChange', cardId: 'cardUsdKrw' },
             'US10Y': { valueId: 'us10yValue', changeId: 'us10yChange', cardId: 'cardUs10Y' },
             'US13W': { valueId: 'us13wValue', changeId: 'us13wChange', cardId: 'cardUs13W' },
-            'DXY': { valueId: 'dxyValue', changeId: 'dxyChange', cardId: 'cardDxy' }
+            'DXY': { valueId: 'dxyValue', changeId: 'dxyChange', cardId: 'cardDxy' },
+            'MVRV_Z': { valueId: 'mvrvZValue', changeId: 'mvrvZChange', cardId: 'cardMvrvZ' }
         };
 
         indicators.forEach(indicator => {
@@ -227,7 +189,9 @@ async function updateSummaryCards() {
             const cardEl = document.getElementById(mapping.cardId);
             const hasChange = typeof indicator.changePercent === 'number';
             const pct = Number(indicator.changePercent) || 0;
-            const isUp = pct >= 0;
+            const hasPointChange = typeof indicator.changeValue === 'number';
+            const pointChange = Number(indicator.changeValue) || 0;
+            const isUp = hasChange ? pct >= 0 : pointChange >= 0;
 
             if (valueEl) {
                 valueEl.textContent = formatMacroValue(indicator);
@@ -238,6 +202,10 @@ async function updateSummaryCards() {
                     const arrow = isUp ? '▲' : '▼';
                     changeEl.textContent = `${arrow} ${Math.abs(pct).toFixed(2)}%`;
                     changeEl.className = `card-change ${isUp ? 'up' : 'down'}`;
+                } else if (hasPointChange) {
+                    const arrow = isUp ? '▲' : '▼';
+                    changeEl.textContent = `${arrow} ${Math.abs(pointChange).toFixed(2)}pt`;
+                    changeEl.className = `card-change ${isUp ? 'up' : 'down'}`;
                 } else {
                     changeEl.textContent = '기준 환율';
                     changeEl.className = 'card-change neutral';
@@ -246,7 +214,7 @@ async function updateSummaryCards() {
 
             if (cardEl) {
                 cardEl.classList.remove('up', 'down');
-                if (hasChange) {
+                if (hasChange || hasPointChange) {
                     cardEl.classList.add(isUp ? 'up' : 'down');
                 }
             }
@@ -311,6 +279,43 @@ async function updateSummaryCards() {
     }
 }
 
+function getSummaryMarketBucket(stock) {
+    const market = stock.market || '';
+    const theme = stock.theme || '';
+    const symbol = stock.symbol || '';
+
+    if (theme === 'crypto' || market === 'crypto') return 'crypto';
+    if (['etf_us', 'etf_kr'].includes(theme) || market === 'etf') return 'etf';
+    if (market === 'korean' || stock.currency === 'KRW' || symbol.endsWith('.KS') || symbol.endsWith('.KQ')) {
+        return 'korean';
+    }
+
+    return 'overseas';
+}
+
+function formatMovementBreakdown(stocks, direction) {
+    const buckets = [
+        ['korean', '국내'],
+        ['overseas', '해외'],
+        ['etf', 'ETF'],
+        ['crypto', '코인']
+    ];
+
+    return buckets
+        .map(([key, label]) => {
+            const bucketStocks = stocks.filter(stock => getSummaryMarketBucket(stock) === key);
+            const movedCount = bucketStocks.filter(stock => {
+                const changePercent = Number(stock.dailyChangePercent ?? stock.changePercent ?? 0);
+                return direction === 'up' ? changePercent > 0 : changePercent < 0;
+            }).length;
+            const totalCount = bucketStocks.length;
+            const ratio = totalCount > 0 ? (movedCount / totalCount) * 100 : 0;
+
+            return `${label} ${movedCount}/${totalCount} (${ratio.toFixed(0)}%)`;
+        })
+        .join(' · ');
+}
+
 function formatMacroValue(indicator) {
     if (indicator.value == null) return '-';
 
@@ -346,6 +351,7 @@ function renderCurrentView() {
     const analysisSection = document.getElementById('analysisSection');
     const portfolioSection = document.getElementById('portfolioSection');
     const historySection = document.getElementById('historySection');
+    const strategySection = document.getElementById('strategySection');
     const heatmapSection = document.getElementById('heatmapSection');
     const filterBar = document.getElementById('marketFilterBar');
 
@@ -356,6 +362,7 @@ function renderCurrentView() {
     analysisSection.style.display = 'none';
     if (portfolioSection) portfolioSection.style.display = 'none';
     if (historySection) historySection.style.display = 'none';
+    if (strategySection) strategySection.style.display = 'none';
     if (heatmapSection) heatmapSection.style.display = 'none';
 
     switch (currentView) {
@@ -387,6 +394,14 @@ function renderCurrentView() {
             filterBar.style.display = 'none';
             if (historySection) historySection.style.display = 'block';
             renderHistoryView();
+            break;
+        case 'strategy':
+            title.textContent = '📝 투자 전략';
+            if (summaryCards) summaryCards.style.display = 'none';
+            stocksSection.style.display = 'none';
+            filterBar.style.display = 'none';
+            if (strategySection) strategySection.style.display = 'block';
+            renderStrategyMemo();
             break;
         case 'heatmap':
             title.textContent = '🗺️ 히트맵';
@@ -427,6 +442,10 @@ function getFilteredStocks() {
                 default: return true;
             }
         });
+    }
+
+    if (currentFavoriteFilter === 'favorites') {
+        stocks = stocks.filter(stock => isFavoriteStock(stock.symbol));
     }
 
     if (currentSearchQuery) {
@@ -511,7 +530,12 @@ function renderThemedStocks(stocks) {
         themeGrid.className = 'stocks-grid';
 
         themeStocks.forEach(stock => {
-            const card = createStockCard(stock, (s) => showAnalysis(s));
+            const card = createStockCard({
+                ...stock,
+                isFavorite: isFavoriteStock(stock.symbol)
+            }, {
+                onToggleFavorite: toggleFavoriteStock
+            });
             themeGrid.appendChild(card);
         });
 
@@ -534,7 +558,12 @@ function renderThemedStocks(stocks) {
         const themeGrid = document.createElement('div');
         themeGrid.className = 'stocks-grid';
         noTheme.forEach(stock => {
-            const card = createStockCard(stock, (s) => showAnalysis(s));
+            const card = createStockCard({
+                ...stock,
+                isFavorite: isFavoriteStock(stock.symbol)
+            }, {
+                onToggleFavorite: toggleFavoriteStock
+            });
             themeGrid.appendChild(card);
         });
         grid.appendChild(themeGrid);
@@ -597,12 +626,14 @@ function renderHistoryView() {
     const container = document.getElementById('historyContent');
     if (!container) return;
 
-    if (!HISTORY_ASSETS.length) {
+    const historyAssets = state.privateHistory || [];
+
+    if (!historyAssets.length) {
         container.innerHTML = '<div class="history-empty">등록된 히스토리가 없습니다.</div>';
         return;
     }
 
-    const overview = buildHistoryOverview(HISTORY_ASSETS);
+    const overview = buildHistoryOverview(historyAssets);
 
     container.innerHTML = `
         <section class="history-overview-card">
@@ -636,7 +667,7 @@ function renderHistoryView() {
                 </div>
             </div>
         </section>
-        ${HISTORY_ASSETS.map(asset => {
+        ${historyAssets.map(asset => {
         const isCashflow = asset.historyType === 'cashflow';
         const summary = isCashflow ? buildCashflowSummary(asset.transactions) : buildHistorySummary(asset.transactions);
         const holdingTotal = (asset.holdings || []).reduce((sum, item) => sum + item.value, 0);
@@ -923,6 +954,65 @@ function setupNavigation() {
     });
 }
 
+function setupStrategyMemo() {
+    const textarea = document.getElementById('strategyMemoInput');
+    const clearButton = document.getElementById('strategyClearBtn');
+
+    if (textarea) {
+        textarea.value = state.strategyMemo || '';
+        textarea.addEventListener('input', () => {
+            state.strategyMemo = textarea.value;
+            state.strategyMemoSavedAt = new Date().toISOString();
+            localStorage.setItem('strategyMemo', state.strategyMemo);
+            localStorage.setItem('strategyMemoSavedAt', state.strategyMemoSavedAt);
+            updateStrategySavedAt();
+        });
+    }
+
+    if (clearButton) {
+        clearButton.addEventListener('click', () => {
+            state.strategyMemo = '';
+            state.strategyMemoSavedAt = new Date().toISOString();
+            localStorage.setItem('strategyMemo', '');
+            localStorage.setItem('strategyMemoSavedAt', state.strategyMemoSavedAt);
+            if (textarea) textarea.value = '';
+            updateStrategySavedAt();
+        });
+    }
+}
+
+function renderStrategyMemo() {
+    const textarea = document.getElementById('strategyMemoInput');
+    if (textarea && textarea.value !== state.strategyMemo) {
+        textarea.value = state.strategyMemo || '';
+    }
+    updateStrategySavedAt();
+}
+
+function updateStrategySavedAt() {
+    const savedAtEl = document.getElementById('strategySavedAt');
+    if (!savedAtEl) return;
+
+    if (!state.strategyMemoSavedAt) {
+        savedAtEl.textContent = '저장 기록 없음';
+        return;
+    }
+
+    const date = new Date(state.strategyMemoSavedAt);
+    if (Number.isNaN(date.getTime())) {
+        savedAtEl.textContent = '방금 저장됨';
+        return;
+    }
+
+    savedAtEl.textContent = `자동 저장: ${date.toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    })}`;
+}
+
 /**
  * 해외/국내 필터 탭 설정
  */
@@ -952,6 +1042,18 @@ function setupMovementFilters() {
     });
 }
 
+function setupFavoriteFilters() {
+    document.querySelectorAll('.favorite-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentFavoriteFilter = btn.dataset.favoriteFilter || 'all';
+            syncFavoriteFilterUI();
+            renderCurrentView();
+        });
+    });
+
+    syncFavoriteFilterUI();
+}
+
 function setupSummaryCardFilters() {
     const filterMap = {
         cardTotal: 'all',
@@ -977,6 +1079,12 @@ function syncMovementFilterUI() {
         button.classList.toggle('active', button.dataset.movement === currentMovementFilter);
     });
     syncSummaryFilterState();
+}
+
+function syncFavoriteFilterUI() {
+    document.querySelectorAll('.favorite-chip').forEach(button => {
+        button.classList.toggle('active', button.dataset.favoriteFilter === currentFavoriteFilter);
+    });
 }
 
 function syncSummaryFilterState() {
@@ -1078,12 +1186,20 @@ function setupModalEvents() {
 }
 
 /**
- * 종목 카드 클릭 → 외부 주식 페이지
+ * 종목 차트 영역 클릭 → 외부 주식 페이지
  */
 document.addEventListener('click', (e) => {
-    const card = e.target.closest('.stock-card');
-    if (!card) return;
-    const symbol = card.dataset.symbol;
+    const favoriteButton = e.target.closest('.stock-favorite-btn');
+    if (favoriteButton) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleFavoriteStock(favoriteButton.dataset.favoriteSymbol);
+        return;
+    }
+
+    const chartLink = e.target.closest('.stock-chart-link');
+    if (!chartLink) return;
+    const symbol = chartLink.dataset.chartSymbol;
     const stock = getAllStocks().find(s => s.symbol === symbol);
     if (!stock) return;
 
@@ -1095,6 +1211,23 @@ document.addEventListener('click', (e) => {
 
     showModal(stock);
 });
+
+function isFavoriteStock(symbol) {
+    return state.favorites.includes(symbol);
+}
+
+function toggleFavoriteStock(symbol) {
+    if (!symbol) return;
+
+    if (isFavoriteStock(symbol)) {
+        state.favorites = state.favorites.filter(item => item !== symbol);
+    } else {
+        state.favorites = [...state.favorites, symbol];
+    }
+
+    localStorage.setItem('favoriteStocks', JSON.stringify(state.favorites));
+    renderCurrentView();
+}
 
 async function showModal(stock) {
     const modal = document.getElementById('stockModal');
@@ -1429,16 +1562,29 @@ async function loadCustomStocksList() {
 // =============================================
 
 let exchangeRate = 1350; // USD/KRW
+let editingPortfolioSymbol = null;
 
 function setupPortfolio() {
     const btnConfirm = document.getElementById('btnConfirmAdd');
     const btnCancel = document.getElementById('btnCancelAdd');
+    const btnOpenAdd = document.getElementById('btnOpenPortfolioAdd');
     const cashToggleButtons = document.querySelectorAll('[data-cash-toggle]');
     const form = document.getElementById('portfolioAddForm');
     const stockSelect = document.getElementById('addStockSelect');
 
+    btnOpenAdd?.addEventListener('click', () => {
+        editingPortfolioSymbol = null;
+        clearAddForm();
+        populateStockSelector();
+        form.style.display = form.style.display === 'block' ? 'none' : 'block';
+        if (form.style.display === 'block') {
+            form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+
     btnCancel?.addEventListener('click', () => {
         form.style.display = 'none';
+        editingPortfolioSymbol = null;
         clearAddForm();
     });
 
@@ -1527,6 +1673,10 @@ function clearAddForm() {
     if (sel) sel.value = '';
     const marketSelect = document.getElementById('addStockMarket');
     if (marketSelect) marketSelect.value = 'overseas';
+    const symbolInput = document.getElementById('addStockInput');
+    if (symbolInput) symbolInput.disabled = false;
+    const stockSelect = document.getElementById('addStockSelect');
+    if (stockSelect) stockSelect.disabled = false;
 }
 
 async function addStockToPortfolio() {
@@ -1555,7 +1705,7 @@ async function addStockToPortfolio() {
     const normalizedName = isCashUsd ? (nameInput?.value.trim() || '달러 현금') : (nameInput?.value.trim() || symbol);
 
     // 중복 체크
-    if (state.portfolio.find(s => s.symbol === normalizedSymbol)) {
+    if (!editingPortfolioSymbol && state.portfolio.find(s => s.symbol === normalizedSymbol)) {
         alert(`${normalizedName}은 이미 포트폴리오에 있습니다.`);
         return;
     }
@@ -1569,16 +1719,63 @@ async function addStockToPortfolio() {
         currency: market === 'korean' ? 'KRW' : 'USD',
         addedAt: new Date().toISOString()
     };
-    state.portfolio.push(newStock);
+
+    if (editingPortfolioSymbol) {
+        state.portfolio = state.portfolio.map(item =>
+            item.symbol === editingPortfolioSymbol
+                ? { ...item, ...newStock, editedAt: new Date().toISOString() }
+                : item
+        );
+    } else {
+        state.portfolio.push(newStock);
+    }
+
     savePortfolio();
 
     form.style.display = 'none';
+    editingPortfolioSymbol = null;
     clearAddForm();
     renderPortfolio();
 }
 
+function openPortfolioEditForm(symbol) {
+    const item = state.portfolio.find(stock => stock.symbol === symbol);
+    const form = document.getElementById('portfolioAddForm');
+    if (!item || !form) return;
+
+    editingPortfolioSymbol = symbol;
+    populateStockSelector();
+
+    const symbolInput = document.getElementById('addStockInput');
+    const nameInput = document.getElementById('addStockName');
+    const qtyInput = document.getElementById('addStockQty');
+    const buyPriceInput = document.getElementById('addStockBuyPrice');
+    const marketSelect = document.getElementById('addStockMarket');
+    const stockSelect = document.getElementById('addStockSelect');
+
+    if (symbolInput) {
+        symbolInput.value = item.symbol === 'USD-CASH' ? 'USD' : item.symbol;
+        symbolInput.disabled = true;
+    }
+    if (nameInput) nameInput.value = item.name || '';
+    if (qtyInput) qtyInput.value = item.qty ?? 1;
+    if (buyPriceInput) buyPriceInput.value = item.buyPrice ?? '';
+    if (marketSelect) marketSelect.value = item.market || 'overseas';
+    if (stockSelect) {
+        stockSelect.value = '';
+        stockSelect.disabled = true;
+    }
+
+    form.style.display = 'block';
+    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function removeFromPortfolio(symbol) {
     state.portfolio = state.portfolio.filter(s => s.symbol !== symbol);
+    if (editingPortfolioSymbol === symbol) {
+        editingPortfolioSymbol = null;
+        clearAddForm();
+    }
     savePortfolio();
     renderPortfolio();
 }
@@ -1698,6 +1895,7 @@ function renderPortfolio() {
                 ` : '<span class="pf-no-data">-</span>'}
             </div>
             <div class="pf-col-action">
+                <button class="btn-edit-stock" data-symbol="${item.symbol}" title="수정">수정</button>
                 <button class="btn-remove-stock" data-symbol="${item.symbol}" title="삭제">×</button>
             </div>
         `;
@@ -1710,6 +1908,13 @@ function renderPortfolio() {
     updatePortfolioSummary(totalValueKRW, totalInvestedKRW);
 
     // 삭제 버튼 이벤트
+    container.querySelectorAll('.btn-edit-stock').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openPortfolioEditForm(btn.dataset.symbol);
+        });
+    });
+
     container.querySelectorAll('.btn-remove-stock').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1723,7 +1928,7 @@ function renderPortfolio() {
     // 행 클릭 → 모달
     container.querySelectorAll('.pf-table-row').forEach(row => {
         row.addEventListener('click', (e) => {
-            if (e.target.closest('.btn-remove-stock')) return;
+            if (e.target.closest('.btn-remove-stock') || e.target.closest('.btn-edit-stock')) return;
             const symbol = row.dataset.symbol;
             const portfolioItem = state.portfolio.find(item => item.symbol === symbol);
             if (portfolioItem?.market === 'cash_usd' || symbol === 'USD-CASH') return;

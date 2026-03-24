@@ -3,3 +3,5 @@ dist/
 .env
 credentials/
 *.log
+data/custom_stocks.json
+data/private_history.json

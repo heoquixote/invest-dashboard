@@ -42,6 +42,10 @@
                     <span class="nav-icon">🧾</span>
                     <span class="nav-label">히스토리</span>
                 </button>
+                <button class="nav-item" data-view="strategy" id="nav-strategy">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-label">투자 전략</span>
+                </button>
                 <button class="nav-item" data-view="heatmap" id="nav-heatmap">
                     <span class="nav-icon">🗺️</span>
                     <span class="nav-label">히트맵</span>
@@ -68,14 +72,6 @@
                     </div>
                 </div>
                 <div class="header-right">
-                    <button class="btn-add-custom" id="btnAddCustomStock" title="종목 추가">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        <span>종목 추가</span>
-                    </button>
                     <button class="btn-theme-toggle" id="btnThemeToggle" title="테마 전환">🌙</button>
                     <button class="btn-refresh" id="btnRefresh" title="데이터 새로고침">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -114,6 +110,7 @@
                     <div class="card-info">
                         <span class="card-label">상승 종목</span>
                         <span class="card-value up" id="upCount">0</span>
+                        <span class="card-breakdown" id="upBreakdown">국내 0/0 (0%) · 해외 0/0 (0%) · ETF 0/0 (0%) · 코인 0/0 (0%)</span>
                     </div>
                 </div>
                 <div class="summary-card" id="cardDown">
@@ -121,6 +118,7 @@
                     <div class="card-info">
                         <span class="card-label">하락 종목</span>
                         <span class="card-value down" id="downCount">0</span>
+                        <span class="card-breakdown" id="downBreakdown">국내 0/0 (0%) · 해외 0/0 (0%) · ETF 0/0 (0%) · 코인 0/0 (0%)</span>
                     </div>
                 </div>
                 <div class="summary-card" id="cardCoverage">
@@ -187,7 +185,6 @@
                         <span class="card-change" id="dxyChange">-</span>
                     </div>
                 </div>
-
                 <!-- 시장 지수 카드 -->
                 <div class="summary-card index-card" id="cardSP500">
                     <div class="card-icon index-us">🇺🇸</div>
@@ -249,6 +246,20 @@
                     </div>
                     <canvas class="index-sparkline" id="sparkline-KQ11"></canvas>
                 </div>
+                <div class="summary-card macro-card" id="cardMvrvZ">
+                    <div class="card-icon macro-btc">₿</div>
+                    <div class="card-info">
+                        <span class="card-label card-label-with-info">
+                            <span>MVRV Z-Score</span>
+                            <span class="info-badge" tabindex="0" aria-label="MVRV Z-Score 설명">
+                                i
+                                <span class="info-tooltip">비트코인의 시가총액과 실현가치를 비교한 온체인 밸류에이션 지표입니다. 일반적으로 낮을수록 저평가, 높을수록 과열 구간으로 해석합니다. Source: checkonchain.com</span>
+                            </span>
+                        </span>
+                        <span class="card-value" id="mvrvZValue">-</span>
+                        <span class="card-change" id="mvrvZChange">-</span>
+                    </div>
+                </div>
             </section>
 
             <!-- 필터 바 -->
@@ -269,6 +280,12 @@
                     <button class="movement-chip down" data-movement="down">▼ 하락</button>
                     <button class="movement-chip spike" data-movement="spike">🔥 급등 5%</button>
                     <button class="movement-chip crash" data-movement="crash">💥 급락 -5%</button>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group" id="favoriteFilters">
+                    <span class="filter-group-label">즐겨찾기</span>
+                    <button class="favorite-chip active" data-favorite-filter="all">전체</button>
+                    <button class="favorite-chip" data-favorite-filter="favorites">★ 즐겨찾기만</button>
                 </div>
                 <div class="filter-divider"></div>
                 <div class="filter-group" id="categoryFilters">
@@ -333,6 +350,7 @@
                 <div class="portfolio-header">
                     <h2>💼 내 포트폴리오</h2>
                     <div class="portfolio-actions">
+                        <button class="btn-add-stock" id="btnOpenPortfolioAdd" type="button">+ 종목 추가</button>
                         <div class="pf-cash-toggle" id="pfCashToggle" role="group" aria-label="원화 포함 여부">
                             <button class="pf-cash-toggle-btn active" id="pfCashIncludeBtn" type="button" data-cash-toggle="include">원화 포함</button>
                             <button class="pf-cash-toggle-btn" id="pfCashExcludeBtn" type="button" data-cash-toggle="exclude">원화 제외</button>
@@ -425,6 +443,26 @@
                         <div class="spinner"></div>
                         <p>히스토리를 준비하는 중...</p>
                     </div>
+                </div>
+            </section>
+
+            <section class="strategy-section" id="strategySection" style="display:none;">
+                <div class="strategy-card">
+                    <div class="strategy-card-header">
+                        <div>
+                            <h2>📝 투자 전략 메모</h2>
+                            <p>매수 기준, 리밸런싱 원칙, 손절/익절 규칙을 자유롭게 적어두세요.</p>
+                        </div>
+                        <div class="strategy-actions">
+                            <span class="strategy-saved-at" id="strategySavedAt">저장 기록 없음</span>
+                            <button class="strategy-clear-btn" id="strategyClearBtn" type="button">비우기</button>
+                        </div>
+                    </div>
+                    <textarea
+                        class="strategy-textarea"
+                        id="strategyMemoInput"
+                        placeholder="예시&#10;- S&P500 ETF는 분할매수, 원화 비중 30% 이상 유지&#10;- 금/달러는 방어 자산으로 10~20% 유지&#10;- 개별주는 손익보다 가설 훼손 여부로 점검"
+                    ></textarea>
                 </div>
             </section>
 

@@ -494,6 +494,14 @@ body {
     letter-spacing: 0.5px;
 }
 
+.card-breakdown {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
 .card-label-with-info {
     display: inline-block;
 }
@@ -592,6 +600,10 @@ body {
 
 .card-icon.macro-dollar {
     background: linear-gradient(135deg, #22c55e, #15803d);
+}
+
+.card-icon.macro-btc {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
 }
 
 .macro-card .card-value {
@@ -1142,7 +1154,7 @@ body {
 
 .pf-table-row {
     display: grid;
-    grid-template-columns: 2fr 1.5fr 0.7fr 1.5fr 1fr 1.5fr 40px;
+    grid-template-columns: 2fr 1.5fr 0.7fr 1.5fr 1fr 1.5fr 88px;
     gap: 8px;
     padding: 14px 20px;
     border-bottom: 1px solid var(--border-color);
@@ -1286,6 +1298,36 @@ body {
     justify-content: center;
     transition: all var(--transition-fast);
     flex-shrink: 0;
+}
+
+.pf-col-action {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.btn-edit-stock {
+    min-width: 44px;
+    height: 28px;
+    border: 1px solid rgba(99, 102, 241, 0.28);
+    background: rgba(99, 102, 241, 0.12);
+    color: #a5b4fc;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.btn-edit-stock:hover {
+    background: rgba(99, 102, 241, 0.22);
+    border-color: rgba(99, 102, 241, 0.45);
+    color: #c7d2fe;
 }
 
 .btn-remove-stock:hover {
@@ -1512,6 +1554,33 @@ body {
     box-shadow: 0 2px 10px rgba(220, 38, 38, 0.4);
 }
 
+.favorite-chip {
+    padding: 5px 12px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-glass);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-family: inherit;
+    font-weight: 500;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.favorite-chip:hover {
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.55);
+    background: rgba(251, 191, 36, 0.1);
+}
+
+.favorite-chip.active {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    border-color: #f59e0b;
+    color: white;
+    box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35);
+}
+
 .stocks-section {
     padding: 8px 28px 20px;
 }
@@ -1714,7 +1783,6 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 18px 20px;
-    cursor: pointer;
     transition: all var(--transition-normal);
     position: relative;
     overflow: hidden;
@@ -1726,6 +1794,7 @@ body {
     inset: 0;
     border-radius: var(--radius-lg);
     opacity: 0;
+    pointer-events: none;
     transition: opacity var(--transition-normal);
 }
 
@@ -1750,11 +1819,38 @@ body {
     opacity: 1;
 }
 
+.stock-chart-link {
+    width: 100%;
+    display: block;
+    margin-top: 6px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    z-index: 1;
+}
+
+.stock-chart-link:hover .stock-sparkline {
+    opacity: 0.92;
+}
+
 .stock-card-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    gap: 10px;
     margin-bottom: 12px;
+    position: relative;
+    z-index: 2;
+}
+
+.stock-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 3;
 }
 
 .stock-symbol {
@@ -1776,6 +1872,36 @@ body {
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.3px;
+}
+
+.stock-favorite-btn {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: rgba(148, 163, 184, 0.08);
+    color: rgba(148, 163, 184, 0.9);
+    font-size: 15px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+    z-index: 4;
+}
+
+.stock-favorite-btn:hover {
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.55);
+    background: rgba(251, 191, 36, 0.12);
+}
+
+.stock-favorite-btn.active {
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.45);
+    background: rgba(245, 158, 11, 0.14);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
 }
 
 .stock-badge.buy {
@@ -3175,6 +3301,87 @@ body {
     color: var(--text-muted);
 }
 
+.strategy-section {
+    padding: 8px 0 20px;
+}
+
+.strategy-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.strategy-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.strategy-card-header h2 {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+}
+
+.strategy-card-header p {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.strategy-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.strategy-saved-at {
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-primary-light);
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.strategy-clear-btn {
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(239, 68, 68, 0.22);
+    background: rgba(239, 68, 68, 0.1);
+    color: #fca5a5;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.strategy-textarea {
+    width: 100%;
+    min-height: 460px;
+    padding: 20px 22px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.72);
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.75;
+    resize: vertical;
+    outline: none;
+}
+
+.strategy-textarea:focus {
+    border-color: rgba(99, 102, 241, 0.7);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+}
+
 .heatmap-section {
     padding: 8px 0 20px;
 }
@@ -3212,6 +3419,10 @@ body {
     .history-overview-grid,
     .history-summary-grid {
         grid-template-columns: 1fr;
+    }
+
+    .strategy-card-header {
+        flex-direction: column;
     }
 
     .history-table {

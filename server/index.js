@@ -8,6 +8,7 @@ import goldRouter from './routes/gold.js';
 import cryptoRouter from './routes/crypto.js';
 import analysisRouter from './routes/analysis.js';
 import newsRouter from './routes/news.js';
+import privateRouter from './routes/private.js';
 import storage from './services/localStorage.js';
 import collector from './services/collector.js';
 import llmService from './services/llmService.js';
@@ -70,12 +71,74 @@ async function fetchUsdKrwFromGoogle() {
     return parseFloat(priceMatch[1]);
 }
 
+function decodePlotlyTypedArray(value) {
+    if (Array.isArray(value)) return value;
+    if (!value || typeof value !== 'object' || !value.bdata || !value.dtype) return [];
+
+    const buffer = Buffer.from(value.bdata, 'base64');
+
+    switch (value.dtype) {
+        case 'f8': {
+            const result = [];
+            for (let offset = 0; offset < buffer.length; offset += 8) {
+                result.push(buffer.readDoubleLE(offset));
+            }
+            return result;
+        }
+        case 'f4': {
+            const result = [];
+            for (let offset = 0; offset < buffer.length; offset += 4) {
+                result.push(buffer.readFloatLE(offset));
+            }
+            return result;
+        }
+        default:
+            return [];
+    }
+}
+
+async function fetchCheckOnChainMetricSnapshot(url, traceName) {
+    const response = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
+
+    const html = await response.text();
+    const match = html.match(/Plotly\.newPlot\(\s*"[^"]+",\s*(\[[\s\S]*?\])\s*,\s*(\{[\s\S]*?\})\s*,\s*\{"responsive":\s*true\}/);
+    if (!match) {
+        throw new Error('Plotly data not found');
+    }
+
+    const traces = JSON.parse(match[1]);
+    const trace = traces.find(item => item.name === traceName);
+    if (!trace) {
+        throw new Error(`Trace not found: ${traceName}`);
+    }
+
+    const yValues = decodePlotlyTypedArray(trace.y).filter(value => Number.isFinite(value));
+    if (!yValues.length) {
+        throw new Error('No y values');
+    }
+
+    const value = yValues.at(-1);
+    const previousValue = yValues.findLast(item => Number.isFinite(item) && item !== value) ?? yValues.at(-2) ?? null;
+
+    return {
+        value,
+        previousValue,
+        changeValue: previousValue != null ? value - previousValue : null
+    };
+}
+
 // 라우트
 app.use('/api/stocks', stocksRouter);
 app.use('/api/gold', goldRouter);
 app.use('/api/crypto', cryptoRouter);
 app.use('/api/analysis', analysisRouter);
 app.use('/api/news', newsRouter);
+app.use('/api/private', privateRouter);
 
 // 헬스 체크
 app.get('/api/health', (req, res) => {
@@ -199,6 +262,38 @@ app.get('/api/macros', async (req, res) => {
             usdKrw = fallback || null;
         }
 
+        let mvrvZScore = null;
+        try {
+            const snapshot = await fetchCheckOnChainMetricSnapshot(
+                'https://charts.checkonchain.com/btconchain/unrealised/mvrv_all_zscore/mvrv_all_zscore_light.html',
+                'MVRV Z-Score'
+            );
+            mvrvZScore = {
+                key: 'MVRV_Z',
+                symbol: 'BTC-MVRV-Z',
+                name: 'MVRV Z-Score',
+                emoji: '₿',
+                value: snapshot.value,
+                previousValue: snapshot.previousValue,
+                changeValue: snapshot.changeValue,
+                changePercent: null,
+                format: 'number'
+            };
+        } catch (error) {
+            console.error('MVRV Z-Score 조회 실패:', error.message);
+            mvrvZScore = {
+                key: 'MVRV_Z',
+                symbol: 'BTC-MVRV-Z',
+                name: 'MVRV Z-Score',
+                emoji: '₿',
+                value: null,
+                previousValue: null,
+                changeValue: null,
+                changePercent: null,
+                format: 'number'
+            };
+        }
+
         res.json({
             success: true,
             data: [
@@ -211,7 +306,8 @@ app.get('/api/macros', async (req, res) => {
                     changePercent: null,
                     format: 'krw'
                 },
-                ...macroResults
+                ...macroResults,
+                mvrvZScore
             ]
         });
     } catch (error) {

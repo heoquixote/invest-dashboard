@@ -3,6 +3,8 @@
  * Yahoo Finance v8 API 직접 호출 + Google Finance 폴백
  */
 
+import storage from './localStorage.js';
+
 // ========== 테마별 종목 그룹 ==========
 
 const STOCK_THEMES = {
@@ -321,13 +323,14 @@ const STOCK_THEMES = {
     },
 
     // ═══════════════════════════════════
-    // 암호화폐 (시총 상위 5개)
+    // 암호화폐 (주요 6개)
     // ═══════════════════════════════════
     crypto: {
         id: 'crypto', name: '🪙 암호화폐 (Crypto)', market: 'crypto',
         stocks: [
             { symbol: 'BTC-USD', name: '비트코인 (Bitcoin)', gFinance: 'BTC-USD' },
             { symbol: 'ETH-USD', name: '이더리움 (Ethereum)', gFinance: 'ETH-USD' },
+            { symbol: 'DOGE-USD', name: '도지코인 (Dogecoin)', gFinance: 'DOGE-USD' },
             { symbol: 'XRP-USD', name: '리플 (XRP)', gFinance: 'XRP-USD' },
             { symbol: 'SOL-USD', name: '솔라나 (Solana)', gFinance: 'SOL-USD' },
             { symbol: 'BNB-USD', name: '바이낸스코인 (BNB)', gFinance: 'BNB-USD' },
@@ -402,6 +405,20 @@ function pickPreviousClose(historyRows) {
 
     const fallback = historyRows.find(row => row.date < targetDate && row.close > 0);
     return fallback?.close || null;
+}
+
+function getStoredPreviousClose(symbol, sheetName = '국내주식') {
+    const rows = storage.readSheet(sheetName);
+    const entries = rows
+        .filter(row => row['종목코드'] === symbol)
+        .map(row => ({
+            date: row['날짜'],
+            price: Number(row['현재가(KRW)']) || 0
+        }))
+        .filter(entry => entry.date && entry.price > 0);
+
+    const latestDate = entries.at(-1)?.date;
+    return entries.findLast(entry => entry.date < latestDate)?.price || null;
 }
 
 /**
@@ -718,6 +735,14 @@ async function getKoreanStocks() {
                 quote = await enrichWithComparisons(quote, {
                     useTradingDayReference: true
                 });
+                const storedPreviousClose = getStoredPreviousClose(stock.symbol);
+                if (storedPreviousClose && storedPreviousClose > 0) {
+                    quote.previousClose = storedPreviousClose;
+                    quote.dailyChange = quote.price - storedPreviousClose;
+                    quote.dailyChangePercent = ((quote.price - storedPreviousClose) / storedPreviousClose) * 100;
+                    quote.change = quote.dailyChange;
+                    quote.changePercent = quote.dailyChangePercent;
+                }
                 results.push(quote);
             }
             await delay(200);

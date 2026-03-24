@@ -78,6 +78,10 @@ export async function fetchNews() {
     return fetchJSON('/news');
 }
 
+export async function fetchPrivateHistory() {
+    return fetchJSON('/private/history');
+}
+
 export async function fetchCustomStocks() {
     return fetchJSON('/stocks/custom');
 }

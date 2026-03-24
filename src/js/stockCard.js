@@ -2,7 +2,8 @@
  * 종목 카드 컴포넌트
  */
 
-export function createStockCard(stock) {
+export function createStockCard(stock, options = {}) {
+  const { onToggleFavorite } = options;
   // 전일비 기반 상승/하락 판단
   const dailyPct = stock.dailyChangePercent ?? stock.changePercent ?? 0;
   const monthlyPct = stock.monthlyChangePercent ?? null;
@@ -28,15 +29,16 @@ export function createStockCard(stock) {
           </div>`;
   }
 
-  const prevCloseFormatted = stock.previousClose ? `${currency}${formatPrice(stock.previousClose, stock.currency)}` : '-';
-
   const card = document.createElement('div');
   card.className = `stock-card ${direction}`;
   card.dataset.symbol = stock.symbol;
+  card.dataset.favorite = stock.isFavorite ? 'true' : 'false';
   const isKorean = stock.symbol.includes('.KS') || stock.symbol.includes('.KQ');
   const displaySymbol = stock.symbol.replace('.KS', '').replace('.KQ', '');
   const primaryLabel = stock.name || displaySymbol;
   const secondaryLabel = displaySymbol;
+  const favoriteClass = stock.isFavorite ? 'active' : '';
+  const favoriteLabel = stock.isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가';
 
   card.innerHTML = `
     <div class="stock-card-header">
@@ -44,9 +46,14 @@ export function createStockCard(stock) {
         <div class="stock-symbol">${primaryLabel}</div>
         <div class="stock-name">${secondaryLabel}</div>
       </div>
-      ${stock.recommendation ? `
-        <span class="stock-badge ${getRecClass(stock.recommendation)}">${stock.recommendation}</span>
-      ` : ''}
+      <div class="stock-card-actions">
+        ${stock.recommendation ? `
+          <span class="stock-badge ${getRecClass(stock.recommendation)}">${stock.recommendation}</span>
+        ` : ''}
+        <button class="stock-favorite-btn ${favoriteClass}" type="button" data-favorite-symbol="${stock.symbol}" aria-label="${favoriteLabel}">
+          ★
+        </button>
+      </div>
     </div>
     <div class="stock-card-body">
       <div class="stock-price">${currency}${priceFormatted}</div>
@@ -58,11 +65,19 @@ export function createStockCard(stock) {
         ${monthlyHtml}
       </div>
     </div>
-    <canvas class="stock-sparkline" id="sparkline-${stock.symbol.replace(/[^a-zA-Z0-9]/g, '_')}"></canvas>
-    <div class="stock-card-footer">
-      <span class="stock-prev-close">전일 ${prevCloseFormatted}</span>
-    </div>
+    <button class="stock-chart-link" type="button" data-chart-symbol="${stock.symbol}" aria-label="${primaryLabel} 차트 열기">
+      <canvas class="stock-sparkline" id="sparkline-${stock.symbol.replace(/[^a-zA-Z0-9]/g, '_')}"></canvas>
+    </button>
   `;
+
+  const favoriteButton = card.querySelector('.stock-favorite-btn');
+  if (favoriteButton && typeof onToggleFavorite === 'function') {
+    favoriteButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onToggleFavorite(stock.symbol);
+    });
+  }
 
   return card;
 }

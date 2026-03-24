@@ -204,6 +204,48 @@ function getLatestEntries(rows, getSymbol) {
     return Array.from(latestBySymbol.values());
 }
 
+function buildPreviousCloseMap(rows, getSymbol, getDate, getPrice) {
+    const entriesBySymbol = new Map();
+
+    rows.forEach(row => {
+        const symbol = getSymbol(row);
+        const date = getDate(row);
+        const price = Number(getPrice(row)) || 0;
+        if (!symbol || !date || price <= 0) return;
+
+        if (!entriesBySymbol.has(symbol)) {
+            entriesBySymbol.set(symbol, []);
+        }
+
+        entriesBySymbol.get(symbol).push({ date, price });
+    });
+
+    const previousCloseMap = new Map();
+
+    entriesBySymbol.forEach((entries, symbol) => {
+        const distinctDates = [];
+        const seenDates = new Set();
+
+        entries.forEach(entry => {
+            if (!seenDates.has(entry.date)) {
+                seenDates.add(entry.date);
+                distinctDates.push(entry);
+            } else {
+                distinctDates[distinctDates.length - 1] = entry;
+            }
+        });
+
+        const latest = distinctDates.at(-1);
+        const previous = distinctDates.findLast(entry => entry.date < latest?.date);
+
+        if (previous?.price > 0) {
+            previousCloseMap.set(symbol, previous.price);
+        }
+    });
+
+    return previousCloseMap;
+}
+
 function loadCachedOverseas() {
     const themeLookup = buildThemeLookup('overseas');
     const rows = storage.readSheet('해외주식');
@@ -231,16 +273,30 @@ function loadCachedOverseas() {
 function loadCachedKorean() {
     const themeLookup = buildThemeLookup('korean');
     const rows = storage.readSheet('국내주식');
+    const previousCloseMap = buildPreviousCloseMap(
+        rows,
+        row => row['종목코드'],
+        row => row['날짜'],
+        row => row['현재가(KRW)']
+    );
 
     return getLatestEntries(rows, row => row['종목코드']).map(row => {
         const meta = themeLookup.get(row['종목코드']) || {};
+        const price = Number(row['현재가(KRW)']) || 0;
+        const previousClose = previousCloseMap.get(row['종목코드']) || price;
+        const change = previousClose > 0 ? price - previousClose : 0;
+        const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
+
         return {
             symbol: row['종목코드'],
             korCode: meta.korCode,
             name: meta.name || row['종목명'],
-            price: Number(row['현재가(KRW)']) || 0,
-            changePercent: Number(row['변동률(%)']) || 0,
-            dailyChangePercent: Number(row['변동률(%)']) || 0,
+            price,
+            change,
+            previousClose,
+            changePercent,
+            dailyChange: change,
+            dailyChangePercent: changePercent,
             volume: Number(row['거래량']) || 0,
             high52: Number(row['52주최고']) || 0,
             low52: Number(row['52주최저']) || 0,
