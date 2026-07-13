@@ -4,7 +4,6 @@
 import * as api from './api.js';
 import { createStockCard, drawSparkline } from './stockCard.js';
 import { renderPriceChart, renderModalChart, renderPortfolioAllocationChart } from './charts.js';
-import { createAnalysisCard, createPortfolioAnalysis } from './analysisPanel.js';
 
 let currentView = 'all'; // all, news, portfolio, history, strategy, heatmap
 let currentMarketFilter = 'all'; // all, korean, overseas, etf, crypto
@@ -69,9 +68,29 @@ const state = {
     favorites: JSON.parse(localStorage.getItem('favoriteStocks') || '[]'),
     strategyMemo: localStorage.getItem('strategyMemo') || '',
     strategyMemoSavedAt: localStorage.getItem('strategyMemoSavedAt') || '',
-    portfolio: JSON.parse(localStorage.getItem('portfolio') || '[]'),
+    portfolio: normalizePortfolioItems(JSON.parse(localStorage.getItem('portfolio') || '[]')),
     loading: false
 };
+
+function createPortfolioItemId() {
+    return `pf_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function getTodayInputDate() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function normalizePortfolioItems(items = []) {
+    return items.map(item => ({
+        ...item,
+        id: item.id || createPortfolioItemId(),
+        buyDate: item.buyDate || item.addedAt?.slice(0, 10) || ''
+    }));
+}
 
 /**
  * 대시보드 초기화
@@ -83,6 +102,7 @@ export async function initDashboard() {
     setupMovementFilters();
     setupFavoriteFilters();
     setupSummaryCardFilters();
+    setupSummaryBreakdownTooltip();
     setupSearchFilter();
     setupNewsFilters();
     setupModalEvents();
@@ -92,7 +112,6 @@ export async function initDashboard() {
     setupStrategyMemo();
     renderCategoryChips();
     await loadAllData();
-    checkHealth();
 }
 
 /**
@@ -103,14 +122,15 @@ async function loadAllData() {
     updateLoadingUI(true);
 
     try {
-        const [overseas, korean, gold, crypto, custom, news, privateHistory] = await Promise.all([
+        const [overseas, korean, gold, crypto, custom, news, privateHistory, exchange] = await Promise.all([
             api.fetchOverseasStocks().catch(() => ({ data: [] })),
             api.fetchKoreanStocks().catch(() => ({ data: [] })),
             api.fetchGold().catch(() => ({ data: [] })),
             api.fetchCrypto().catch(() => ({ data: [] })),
             api.fetchCustomStocks().catch(() => ({ data: [] })),
             api.fetchNews().catch(() => ({ data: { updatedAt: null, categories: [], items: {} } })),
-            api.fetchPrivateHistory().catch(() => ({ data: [] }))
+            api.fetchPrivateHistory().catch(() => ({ data: [] })),
+            api.fetchExchangeRate().catch(() => ({ data: null }))
         ]);
 
         state.overseas = overseas.data || [];
@@ -120,6 +140,7 @@ async function loadAllData() {
         state.news = news.data || { updatedAt: null, categories: [], items: {} };
         state.custom = custom.data || [];
         state.privateHistory = privateHistory.data || [];
+        updateExchangeRate(exchange.data?.usdKrw);
 
         renderCurrentView();
         updateSummaryCards();
@@ -158,8 +179,8 @@ async function updateSummaryCards() {
     if (upEl) upEl.textContent = upCount;
     if (downEl) downEl.textContent = downCount;
     if (flatMetaEl) flatMetaEl.textContent = `보합 ${flatCount}`;
-    if (upBreakdownEl) upBreakdownEl.textContent = formatMovementBreakdown(all, 'up');
-    if (downBreakdownEl) downBreakdownEl.textContent = formatMovementBreakdown(all, 'down');
+    if (upBreakdownEl) upBreakdownEl.innerHTML = formatMovementBreakdown(all, 'up');
+    if (downBreakdownEl) downBreakdownEl.innerHTML = formatMovementBreakdown(all, 'down');
     if (coverageEl) {
         coverageEl.textContent = `${withPrice}/${all.length}`;
         coverageEl.title = `종가 기준 ${withPrice}개 종목 수집 완료`;
@@ -177,6 +198,7 @@ async function updateSummaryCards() {
             'US10Y': { valueId: 'us10yValue', changeId: 'us10yChange', cardId: 'cardUs10Y' },
             'US13W': { valueId: 'us13wValue', changeId: 'us13wChange', cardId: 'cardUs13W' },
             'DXY': { valueId: 'dxyValue', changeId: 'dxyChange', cardId: 'cardDxy' },
+            'VIX': { valueId: 'vixValue', changeId: 'vixChange', cardId: 'cardVix' },
             'MVRV_Z': { valueId: 'mvrvZValue', changeId: 'mvrvZChange', cardId: 'cardMvrvZ' }
         };
 
@@ -311,9 +333,16 @@ function formatMovementBreakdown(stocks, direction) {
             const totalCount = bucketStocks.length;
             const ratio = totalCount > 0 ? (movedCount / totalCount) * 100 : 0;
 
-            return `${label} ${movedCount}/${totalCount} (${ratio.toFixed(0)}%)`;
+            return `
+                <div class="card-breakdown-item">
+                    <span class="card-breakdown-label">${label}</span>
+                    <span class="card-breakdown-count">${movedCount}/${totalCount}</span>
+                    <span class="card-breakdown-dot">·</span>
+                    <span class="card-breakdown-ratio">${ratio.toFixed(0)}%</span>
+                </div>
+            `;
         })
-        .join(' · ');
+        .join('');
 }
 
 function formatMacroValue(indicator) {
@@ -348,7 +377,6 @@ function renderCurrentView() {
     const stocksSection = document.getElementById('stocksSection');
     const newsSection = document.getElementById('newsSection');
     const chartSection = document.getElementById('chartSection');
-    const analysisSection = document.getElementById('analysisSection');
     const portfolioSection = document.getElementById('portfolioSection');
     const historySection = document.getElementById('historySection');
     const strategySection = document.getElementById('strategySection');
@@ -359,7 +387,6 @@ function renderCurrentView() {
     stocksSection.style.display = 'block';
     if (newsSection) newsSection.style.display = 'none';
     chartSection.style.display = 'none';
-    analysisSection.style.display = 'none';
     if (portfolioSection) portfolioSection.style.display = 'none';
     if (historySection) historySection.style.display = 'none';
     if (strategySection) strategySection.style.display = 'none';
@@ -1074,6 +1101,50 @@ function setupSummaryCardFilters() {
     });
 }
 
+function setupSummaryBreakdownTooltip() {
+    const tooltip = document.getElementById('summaryBreakdownTooltip');
+    if (!tooltip) return;
+
+    const cards = document.querySelectorAll('[data-breakdown-source]');
+
+    const hideTooltip = () => {
+        tooltip.classList.remove('active');
+        tooltip.setAttribute('aria-hidden', 'true');
+    };
+
+    const positionTooltip = (event) => {
+        const offset = 18;
+        const tooltipWidth = tooltip.offsetWidth || 240;
+        const tooltipHeight = tooltip.offsetHeight || 120;
+        const left = Math.min(event.clientX + offset, window.innerWidth - tooltipWidth - 12);
+        const top = Math.min(event.clientY + offset, window.innerHeight - tooltipHeight - 12);
+
+        tooltip.style.left = `${Math.max(12, left)}px`;
+        tooltip.style.top = `${Math.max(12, top)}px`;
+    };
+
+    cards.forEach(card => {
+        const sourceId = card.dataset.breakdownSource;
+        const sourceEl = document.getElementById(sourceId);
+        if (!sourceEl) return;
+
+        card.addEventListener('mouseenter', (event) => {
+            if (!sourceEl.innerHTML.trim()) return;
+            tooltip.innerHTML = sourceEl.innerHTML;
+            tooltip.classList.add('active');
+            tooltip.setAttribute('aria-hidden', 'false');
+            positionTooltip(event);
+        });
+
+        card.addEventListener('mousemove', (event) => {
+            if (!tooltip.classList.contains('active')) return;
+            positionTooltip(event);
+        });
+
+        card.addEventListener('mouseleave', hideTooltip);
+    });
+}
+
 function syncMovementFilterUI() {
     document.querySelectorAll('.movement-chip').forEach(button => {
         button.classList.toggle('active', button.dataset.movement === currentMovementFilter);
@@ -1293,30 +1364,6 @@ async function showModal(stock) {
 }
 
 /**
- * AI 분석 실행
- */
-async function showAnalysis(stock) {
-    const content = document.getElementById('analysisContent');
-    if (!content) return;
-
-    const section = document.getElementById('analysisSection');
-    if (section) section.style.display = 'block';
-
-    content.innerHTML = '<div class="analysis-loading"><div class="spinner"></div><p>AI 분석 중...</p></div>';
-
-    try {
-        const result = await api.requestAnalysis(stock.symbol, stock);
-        if (result.data) {
-            content.innerHTML = '';
-            content.appendChild(createAnalysisCard(result.data));
-            section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    } catch (error) {
-        content.innerHTML = `<div class="analysis-error"><p>❌ 분석 실패: ${error.message}</p><p>GEMINI_API_KEY가 설정되어 있는지 확인해주세요.</p></div>`;
-    }
-}
-
-/**
  * 헤더 버튼 설정
  */
 function setupHeaderButtons() {
@@ -1355,22 +1402,6 @@ function setupHeaderButtons() {
             localStorage.setItem('theme', next);
             themeBtn.textContent = next === 'dark' ? '☀️' : '🌙';
         });
-    }
-}
-
-/**
- * 서버 연결 체크
- */
-async function checkHealth() {
-    const dot = document.querySelector('.status-dot');
-    const text = document.querySelector('.status-text');
-    try {
-        await api.checkHealth();
-        dot?.classList.add('connected');
-        if (text) text.textContent = '서버 연결됨';
-    } catch {
-        dot?.classList.add('error');
-        if (text) text.textContent = '서버 연결 실패';
     }
 }
 
@@ -1562,7 +1593,7 @@ async function loadCustomStocksList() {
 // =============================================
 
 let exchangeRate = 1350; // USD/KRW
-let editingPortfolioSymbol = null;
+let editingPortfolioId = null;
 
 function setupPortfolio() {
     const btnConfirm = document.getElementById('btnConfirmAdd');
@@ -1573,7 +1604,7 @@ function setupPortfolio() {
     const stockSelect = document.getElementById('addStockSelect');
 
     btnOpenAdd?.addEventListener('click', () => {
-        editingPortfolioSymbol = null;
+        editingPortfolioId = null;
         clearAddForm();
         populateStockSelector();
         form.style.display = form.style.display === 'block' ? 'none' : 'block';
@@ -1584,7 +1615,7 @@ function setupPortfolio() {
 
     btnCancel?.addEventListener('click', () => {
         form.style.display = 'none';
-        editingPortfolioSymbol = null;
+        editingPortfolioId = null;
         clearAddForm();
     });
 
@@ -1630,12 +1661,20 @@ function setupPortfolio() {
 async function loadExchangeRate() {
     try {
         const res = await api.fetchExchangeRate();
-        if (res.data?.usdKrw) {
-            exchangeRate = res.data.usdKrw;
-            const el = document.getElementById('pfExchangeRate');
-            if (el) el.textContent = `₩${Math.round(exchangeRate).toLocaleString()}`;
-        }
+        updateExchangeRate(res.data?.usdKrw);
     } catch { /* ignore */ }
+}
+
+function updateExchangeRate(nextRate) {
+    if (!nextRate) return;
+
+    exchangeRate = nextRate;
+    const el = document.getElementById('pfExchangeRate');
+    if (el) el.textContent = `₩${Math.round(exchangeRate).toLocaleString()}`;
+
+    if (currentView === 'portfolio') {
+        renderPortfolio();
+    }
 }
 
 function populateStockSelector() {
@@ -1643,19 +1682,15 @@ function populateStockSelector() {
     if (!select) return;
 
     const allStocks = getAllStocks();
-    const existingSymbols = new Set(state.portfolio.map(p => p.symbol));
 
     select.innerHTML = '<option value="">-- 기존 종목에서 선택 --</option>';
 
-    if (!existingSymbols.has('USD-CASH')) {
-        const usdOption = document.createElement('option');
-        usdOption.value = 'USD-CASH|cash_usd';
-        usdOption.textContent = `달러 현금 (USD) - ₩${Math.round(exchangeRate).toLocaleString()}`;
-        select.appendChild(usdOption);
-    }
+    const usdOption = document.createElement('option');
+    usdOption.value = 'USD-CASH|cash_usd';
+    usdOption.textContent = `달러 현금 (USD) - ₩${Math.round(exchangeRate).toLocaleString()}`;
+    select.appendChild(usdOption);
 
     allStocks.forEach(stock => {
-        if (existingSymbols.has(stock.symbol)) return;
         const opt = document.createElement('option');
         opt.value = `${stock.symbol}|${stock.currency === 'KRW' ? 'korean' : 'overseas'}`;
         const currency = stock.currency === 'KRW' ? '₩' : '$';
@@ -1669,6 +1704,8 @@ function clearAddForm() {
     ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     const qty = document.getElementById('addStockQty');
     if (qty) qty.value = '1';
+    const buyDate = document.getElementById('addStockBuyDate');
+    if (buyDate) buyDate.value = getTodayInputDate();
     const sel = document.getElementById('addStockSelect');
     if (sel) sel.value = '';
     const marketSelect = document.getElementById('addStockMarket');
@@ -1684,6 +1721,7 @@ async function addStockToPortfolio() {
     const nameInput = document.getElementById('addStockName');
     const qtyInput = document.getElementById('addStockQty');
     const buyPriceInput = document.getElementById('addStockBuyPrice');
+    const buyDateInput = document.getElementById('addStockBuyDate');
     const marketSelect = document.getElementById('addStockMarket');
     const form = document.getElementById('portfolioAddForm');
 
@@ -1692,6 +1730,7 @@ async function addStockToPortfolio() {
     const name = nameInput?.value.trim() || symbol;
     const qty = parseFloat(qtyInput?.value) || 1;
     const buyPrice = parseFloat(buyPriceInput?.value) || 0;
+    const buyDate = buyDateInput?.value || getTodayInputDate();
     const typedUsdCash = ['USD', 'USD-CASH', '달러', '달러현금'].includes(symbol);
     const market = typedUsdCash ? 'cash_usd' : (marketSelect?.value || 'overseas');
     const isCashUsd = market === 'cash_usd';
@@ -1704,25 +1743,21 @@ async function addStockToPortfolio() {
     const normalizedSymbol = isCashUsd ? 'USD-CASH' : symbol;
     const normalizedName = isCashUsd ? (nameInput?.value.trim() || '달러 현금') : (nameInput?.value.trim() || symbol);
 
-    // 중복 체크
-    if (!editingPortfolioSymbol && state.portfolio.find(s => s.symbol === normalizedSymbol)) {
-        alert(`${normalizedName}은 이미 포트폴리오에 있습니다.`);
-        return;
-    }
-
     const newStock = {
+        id: editingPortfolioId || createPortfolioItemId(),
         symbol: normalizedSymbol,
         name: normalizedName,
         market,
         qty,
         buyPrice,
+        buyDate,
         currency: market === 'korean' ? 'KRW' : 'USD',
         addedAt: new Date().toISOString()
     };
 
-    if (editingPortfolioSymbol) {
+    if (editingPortfolioId) {
         state.portfolio = state.portfolio.map(item =>
-            item.symbol === editingPortfolioSymbol
+            item.id === editingPortfolioId
                 ? { ...item, ...newStock, editedAt: new Date().toISOString() }
                 : item
         );
@@ -1733,23 +1768,24 @@ async function addStockToPortfolio() {
     savePortfolio();
 
     form.style.display = 'none';
-    editingPortfolioSymbol = null;
+    editingPortfolioId = null;
     clearAddForm();
     renderPortfolio();
 }
 
-function openPortfolioEditForm(symbol) {
-    const item = state.portfolio.find(stock => stock.symbol === symbol);
+function openPortfolioEditForm(portfolioId) {
+    const item = state.portfolio.find(stock => stock.id === portfolioId);
     const form = document.getElementById('portfolioAddForm');
     if (!item || !form) return;
 
-    editingPortfolioSymbol = symbol;
+    editingPortfolioId = portfolioId;
     populateStockSelector();
 
     const symbolInput = document.getElementById('addStockInput');
     const nameInput = document.getElementById('addStockName');
     const qtyInput = document.getElementById('addStockQty');
     const buyPriceInput = document.getElementById('addStockBuyPrice');
+    const buyDateInput = document.getElementById('addStockBuyDate');
     const marketSelect = document.getElementById('addStockMarket');
     const stockSelect = document.getElementById('addStockSelect');
 
@@ -1760,6 +1796,7 @@ function openPortfolioEditForm(symbol) {
     if (nameInput) nameInput.value = item.name || '';
     if (qtyInput) qtyInput.value = item.qty ?? 1;
     if (buyPriceInput) buyPriceInput.value = item.buyPrice ?? '';
+    if (buyDateInput) buyDateInput.value = item.buyDate || item.addedAt?.slice(0, 10) || getTodayInputDate();
     if (marketSelect) marketSelect.value = item.market || 'overseas';
     if (stockSelect) {
         stockSelect.value = '';
@@ -1771,9 +1808,9 @@ function openPortfolioEditForm(symbol) {
 }
 
 function removeFromPortfolio(symbol) {
-    state.portfolio = state.portfolio.filter(s => s.symbol !== symbol);
-    if (editingPortfolioSymbol === symbol) {
-        editingPortfolioSymbol = null;
+    state.portfolio = state.portfolio.filter(s => s.id !== symbol);
+    if (editingPortfolioId === symbol) {
+        editingPortfolioId = null;
         clearAddForm();
     }
     savePortfolio();
@@ -1781,7 +1818,7 @@ function removeFromPortfolio(symbol) {
 }
 
 function savePortfolio() {
-    localStorage.setItem('portfolio', JSON.stringify(state.portfolio));
+    localStorage.setItem('portfolio', JSON.stringify(normalizePortfolioItems(state.portfolio)));
 }
 
 function renderPortfolio() {
@@ -1803,13 +1840,40 @@ function renderPortfolio() {
     const allStocks = getAllStocks();
     let totalValueKRW = 0;
     let totalInvestedKRW = 0;
+    const groupedSummaries = [];
 
-    // 테이블 형태 리스트
-    const table = document.createElement('div');
-    table.className = 'pf-table';
+    const summarySection = document.createElement('section');
+    summarySection.className = 'pf-holdings-section';
+    summarySection.innerHTML = `
+        <div class="pf-section-header">
+            <h3>종목별 합산</h3>
+            <span>총 수량 · 평단가 · 손익</span>
+        </div>
+    `;
 
-    // 헤더
-    table.innerHTML = `
+    const summaryTable = document.createElement('div');
+    summaryTable.className = 'pf-summary-table';
+    summaryTable.innerHTML = `
+        <div class="pf-summary-table-header">
+            <span class="pf-col-name">종목</span>
+            <span class="pf-col-price">현재가</span>
+            <span class="pf-col-qty">총 수량</span>
+            <span class="pf-col-buy">평단가</span>
+            <span class="pf-col-gain">증감</span>
+        </div>`;
+
+    const historySection = document.createElement('section');
+    historySection.className = 'pf-holdings-section';
+    historySection.innerHTML = `
+        <div class="pf-section-header">
+            <h3>히스토리</h3>
+            <span>개별 매수 내역</span>
+        </div>
+    `;
+
+    const historyTable = document.createElement('div');
+    historyTable.className = 'pf-table';
+    historyTable.innerHTML = `
         <div class="pf-table-header">
             <span class="pf-col-name">종목</span>
             <span class="pf-col-price">현재가</span>
@@ -1836,6 +1900,8 @@ function renderPortfolio() {
         return;
     }
 
+    const groupedItems = new Map();
+
     visiblePortfolioItems.forEach(item => {
         const portfolioItem = calculatePortfolioItem(item, allStocks);
         const {
@@ -1852,6 +1918,8 @@ function renderPortfolio() {
             liveData
         } = portfolioItem;
         const currencySymbol = isKRW ? '₩' : '$';
+        const groupKey = `${item.symbol}__${item.market || ''}`;
+        const currentUnitValueKRW = qty > 0 ? evalTotalKRW / qty : 0;
 
         const dailyPct = isUsdCash ? 0 : (liveData ? (liveData.dailyChangePercent ?? liveData.changePercent ?? 0) : 0);
         const dailyDirection = dailyPct === 0 ? 'neutral' : (dailyPct > 0 ? 'up' : 'down');
@@ -1867,6 +1935,7 @@ function renderPortfolio() {
 
         const row = document.createElement('div');
         row.className = `pf-table-row ${dailyDirection}`;
+        row.dataset.portfolioId = item.id;
         row.dataset.symbol = item.symbol;
 
         row.innerHTML = `
@@ -1887,6 +1956,7 @@ function renderPortfolio() {
             </div>
             <div class="pf-col-buy">
                 ${buyPrice > 0 ? `${isUsdCash ? '₩' : currencySymbol}${buyPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '<span class="pf-no-data">-</span>'}
+                ${item.buyDate ? `<span class="pf-buy-date">${item.buyDate}</span>` : ''}
             </div>
             <div class="pf-col-gain ${gainDir}">
                 ${buyPrice > 0 ? `
@@ -1895,15 +1965,89 @@ function renderPortfolio() {
                 ` : '<span class="pf-no-data">-</span>'}
             </div>
             <div class="pf-col-action">
-                <button class="btn-edit-stock" data-symbol="${item.symbol}" title="수정">수정</button>
-                <button class="btn-remove-stock" data-symbol="${item.symbol}" title="삭제">×</button>
+                <button class="btn-edit-stock" data-portfolio-id="${item.id}" title="수정">수정</button>
+                <button class="btn-remove-stock" data-portfolio-id="${item.id}" data-symbol="${item.symbol}" title="삭제">×</button>
             </div>
         `;
 
-        table.appendChild(row);
+        historyTable.appendChild(row);
+
+        if (!groupedItems.has(groupKey)) {
+            groupedItems.set(groupKey, {
+                key: groupKey,
+                symbol: item.symbol,
+                name: item.name || liveData?.name || item.symbol,
+                market: item.market,
+                isUsdCash,
+                isKRW,
+                currencySymbol,
+                currentPrice,
+                currentUnitValueKRW,
+                totalQty: 0,
+                totalEvalKRW: 0,
+                totalInvestedKRW: 0,
+                totalBuyValue: 0,
+                dailyPct,
+                dailyDirection
+            });
+        }
+
+        const group = groupedItems.get(groupKey);
+        group.totalQty += qty;
+        group.totalEvalKRW += evalTotalKRW;
+        group.totalInvestedKRW += investedKRW;
+        group.totalBuyValue += buyPrice * qty;
+        group.currentPrice = currentPrice;
+        group.currentUnitValueKRW = currentUnitValueKRW;
+        group.dailyPct = dailyPct;
+        group.dailyDirection = dailyDirection;
     });
 
-    container.appendChild(table);
+    groupedItems.forEach(group => groupedSummaries.push(group));
+    groupedSummaries
+        .sort((a, b) => b.totalEvalKRW - a.totalEvalKRW)
+        .forEach(group => {
+            const avgBuyPrice = group.totalQty > 0 ? group.totalBuyValue / group.totalQty : 0;
+            const gainKRW = group.totalEvalKRW - group.totalInvestedKRW;
+            const gainPct = group.totalInvestedKRW > 0 ? (gainKRW / group.totalInvestedKRW) * 100 : 0;
+            const gainDir = gainKRW >= 0 ? 'up' : 'down';
+            const gainArrow = gainKRW >= 0 ? '▲' : '▼';
+            const dailyArrow = group.dailyPct === 0 ? '' : (group.dailyPct > 0 ? '▲' : '▼');
+            const symbolLabel = group.isUsdCash ? 'USD 현금' : group.symbol.replace('.KS', '').replace('.KQ', '');
+
+            const summaryRow = document.createElement('div');
+            summaryRow.className = 'pf-summary-table-row';
+            summaryRow.innerHTML = `
+                <div class="pf-col-name">
+                    <div class="pf-stock-info">
+                        <span class="pf-stock-name">${group.name}</span>
+                        <span class="pf-stock-symbol">${symbolLabel}</span>
+                    </div>
+                </div>
+                <div class="pf-col-price">
+                    <span class="pf-current-price">${group.isUsdCash ? `₩${Math.round(exchangeRate).toLocaleString()}` : (group.currentPrice ? `${group.currencySymbol}${group.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-')}</span>
+                    <span class="pf-daily-change ${group.dailyDirection}">${group.isUsdCash ? '환율 기준 평가' : `${dailyArrow ? `${dailyArrow} ` : ''}${Math.abs(group.dailyPct).toFixed(2)}%`}</span>
+                </div>
+                <div class="pf-col-qty">
+                    <span class="pf-summary-main">${group.totalQty.toLocaleString()}</span>
+                    <span class="pf-summary-subtext">합산 수량</span>
+                </div>
+                <div class="pf-col-buy">
+                    <span class="pf-summary-main">${avgBuyPrice > 0 ? `${group.isUsdCash ? '₩' : group.currencySymbol}${avgBuyPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-'}</span>
+                    <span class="pf-summary-subtext">평가금 ₩${Math.round(group.totalEvalKRW).toLocaleString()}</span>
+                </div>
+                <div class="pf-col-gain ${gainDir}">
+                    <span class="pf-gain-amount ${gainDir}">${gainArrow} ₩${Math.abs(Math.round(gainKRW)).toLocaleString()}</span>
+                    <span class="pf-gain-pct ${gainDir}">${gainArrow} ${Math.abs(gainPct).toFixed(2)}%</span>
+                </div>
+            `;
+            summaryTable.appendChild(summaryRow);
+        });
+
+    summarySection.appendChild(summaryTable);
+    historySection.appendChild(historyTable);
+    container.appendChild(summarySection);
+    container.appendChild(historySection);
     renderPortfolioAllocation(buildPortfolioAllocation(allStocks));
     updatePortfolioSummary(totalValueKRW, totalInvestedKRW);
 
@@ -1911,7 +2055,7 @@ function renderPortfolio() {
     container.querySelectorAll('.btn-edit-stock').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
-            openPortfolioEditForm(btn.dataset.symbol);
+            openPortfolioEditForm(btn.dataset.portfolioId);
         });
     });
 
@@ -1919,8 +2063,9 @@ function renderPortfolio() {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const sym = btn.dataset.symbol;
+            const portfolioId = btn.dataset.portfolioId;
             if (confirm(`${sym}을(를) 포트폴리오에서 삭제하시겠습니까?`)) {
-                removeFromPortfolio(sym);
+                removeFromPortfolio(portfolioId);
             }
         });
     });
@@ -1930,7 +2075,8 @@ function renderPortfolio() {
         row.addEventListener('click', (e) => {
             if (e.target.closest('.btn-remove-stock') || e.target.closest('.btn-edit-stock')) return;
             const symbol = row.dataset.symbol;
-            const portfolioItem = state.portfolio.find(item => item.symbol === symbol);
+            const portfolioId = row.dataset.portfolioId;
+            const portfolioItem = state.portfolio.find(item => item.id === portfolioId);
             if (portfolioItem?.market === 'cash_usd' || symbol === 'USD-CASH') return;
             const stock = allStocks.find(s => s.symbol === symbol);
             if (stock) showModal(stock);
@@ -1997,7 +2143,7 @@ function buildPortfolioAllocation(allStocks) {
     const allocationMap = new Map([
         ['korean', { key: 'korean', label: '국내주식', color: '#10b981', value: 0, invested: 0 }],
         ['overseas', { key: 'overseas', label: '해외주식', color: '#f59e0b', value: 0, invested: 0 }],
-        ['etf', { key: 'etf', label: 'ETF', color: '#14b8a6', value: 0, invested: 0 }],
+        ['etf', { key: 'etf', label: 'ETF', color: '#38bdf8', value: 0, invested: 0 }],
         ['crypto', { key: 'crypto', label: '코인', color: '#ef4444', value: 0, invested: 0 }],
         ['cash', { key: 'cash', label: '원화/현금', color: '#6366f1', value: 0, invested: 0 }]
     ]);

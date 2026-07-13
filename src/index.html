@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📊 Investment Dashboard - 투자 분석 대시보드</title>
-    <meta name="description" content="해외 주식, 국내 주식, 금 시세를 실시간 모니터링하고 AI 분석으로 매수/매도 추천을 받는 투자 대시보드">
+    <meta name="description" content="해외 주식, 국내 주식, ETF, 코인, 금 시세를 한 화면에서 모니터링하는 투자 대시보드">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -51,12 +51,6 @@
                     <span class="nav-label">히트맵</span>
                 </button>
             </nav>
-            <div class="sidebar-footer">
-                <div class="connection-status" id="connectionStatus">
-                    <span class="status-dot"></span>
-                    <span class="status-text">연결 중...</span>
-                </div>
-            </div>
         </aside>
 
         <!-- 메인 콘텐츠 -->
@@ -105,20 +99,20 @@
                         <span class="card-change neutral" id="flatCountMeta">보합 0</span>
                     </div>
                 </div>
-                <div class="summary-card" id="cardUp">
+                <div class="summary-card" id="cardUp" data-breakdown-source="upBreakdown">
                     <div class="card-icon up">📈</div>
                     <div class="card-info">
                         <span class="card-label">상승 종목</span>
                         <span class="card-value up" id="upCount">0</span>
-                        <span class="card-breakdown" id="upBreakdown">국내 0/0 (0%) · 해외 0/0 (0%) · ETF 0/0 (0%) · 코인 0/0 (0%)</span>
+                        <div class="card-breakdown-grid" id="upBreakdown"></div>
                     </div>
                 </div>
-                <div class="summary-card" id="cardDown">
+                <div class="summary-card" id="cardDown" data-breakdown-source="downBreakdown">
                     <div class="card-icon down">📉</div>
                     <div class="card-info">
                         <span class="card-label">하락 종목</span>
                         <span class="card-value down" id="downCount">0</span>
-                        <span class="card-breakdown" id="downBreakdown">국내 0/0 (0%) · 해외 0/0 (0%) · ETF 0/0 (0%) · 코인 0/0 (0%)</span>
+                        <div class="card-breakdown-grid" id="downBreakdown"></div>
                     </div>
                 </div>
                 <div class="summary-card" id="cardCoverage">
@@ -183,6 +177,20 @@
                         </span>
                         <span class="card-value" id="dxyValue">-</span>
                         <span class="card-change" id="dxyChange">-</span>
+                    </div>
+                </div>
+                <div class="summary-card macro-card" id="cardVix">
+                    <div class="card-icon macro-vix">😱</div>
+                    <div class="card-info">
+                        <span class="card-label card-label-with-info">
+                            <span>공포지수 (VIX)</span>
+                            <span class="info-badge" tabindex="0" aria-label="공포지수 설명">
+                                i
+                                <span class="info-tooltip">미국 옵션 시장의 변동성 기대를 나타내는 지수입니다. 일반적으로 높을수록 시장 불안이 커진 것으로 해석합니다.</span>
+                            </span>
+                        </span>
+                        <span class="card-value" id="vixValue">-</span>
+                        <span class="card-change" id="vixChange">-</span>
                     </div>
                 </div>
                 <!-- 시장 지수 카드 -->
@@ -261,6 +269,7 @@
                     </div>
                 </div>
             </section>
+            <div class="summary-breakdown-tooltip" id="summaryBreakdownTooltip" role="tooltip" aria-hidden="true"></div>
 
             <!-- 필터 바 -->
             <div class="filter-bar" id="marketFilterBar">
@@ -415,6 +424,7 @@
                                 step="any" value="1">
                             <input type="number" class="add-stock-buy-price" id="addStockBuyPrice" placeholder="매입 단가"
                                 min="0" step="any">
+                            <input type="date" class="add-stock-date" id="addStockBuyDate">
                             <select class="add-stock-market" id="addStockMarket">
                                 <option value="overseas">🌎 해외(USD)</option>
                                 <option value="korean">🇰🇷 국내(KRW)</option>
@@ -474,18 +484,6 @@
                 </div>
             </section>
 
-            <!-- AI 분석 패널 -->
-            <section class="analysis-section" id="analysisSection" style="display:none;">
-                <div class="analysis-header">
-                    <h2>🤖 AI 투자 분석</h2>
-                </div>
-                <div class="analysis-content" id="analysisContent">
-                    <div class="analysis-empty">
-                        <span class="analysis-empty-icon">🔍</span>
-                        <p>AI 분석 결과가 여기에 표시됩니다.</p>
-                    </div>
-                </div>
-            </section>
         </main>
     </div>
 

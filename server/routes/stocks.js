@@ -79,7 +79,9 @@ router.get('/themes', (req, res) => {
 router.get('/overseas', async (req, res) => {
     try {
         const cached = cache.get('overseas_stocks');
-        if (cached) return res.json({ success: true, data: attachExternalMetaList(cached), cached: true });
+        if (Array.isArray(cached) && cached.length > 0) {
+            return res.json({ success: true, data: attachExternalMetaList(cached), cached: true });
+        }
 
         // 메모리 캐시에서 최신 수집 데이터 확인
         const latest = collector.getLatestData();
@@ -90,8 +92,12 @@ router.get('/overseas', async (req, res) => {
 
         // 캐시 없으면 직접 조회
         const stocks = await yahooFinance.getOverseasStocks();
-        cache.set('overseas_stocks', stocks, 5 * 60 * 1000);
-        res.json({ success: true, data: attachExternalMetaList(stocks) });
+        if (stocks.length > 0) {
+            cache.set('overseas_stocks', stocks, 5 * 60 * 1000);
+            return res.json({ success: true, data: attachExternalMetaList(stocks) });
+        }
+
+        res.json({ success: true, data: attachExternalMetaList(latest.overseas || []) });
     } catch (error) {
         console.error('해외 주식 API 오류:', error);
         res.status(500).json({ success: false, error: error.message });
@@ -104,7 +110,9 @@ router.get('/overseas', async (req, res) => {
 router.get('/korean', async (req, res) => {
     try {
         const cached = cache.get('korean_stocks');
-        if (cached) return res.json({ success: true, data: attachExternalMetaList(cached), cached: true });
+        if (Array.isArray(cached) && cached.length > 0) {
+            return res.json({ success: true, data: attachExternalMetaList(cached), cached: true });
+        }
 
         const latest = collector.getLatestData();
         if (latest.korean.length > 0) {
@@ -113,8 +121,12 @@ router.get('/korean', async (req, res) => {
         }
 
         const stocks = await yahooFinance.getKoreanStocks();
-        cache.set('korean_stocks', stocks, 5 * 60 * 1000);
-        res.json({ success: true, data: attachExternalMetaList(stocks) });
+        if (stocks.length > 0) {
+            cache.set('korean_stocks', stocks, 5 * 60 * 1000);
+            return res.json({ success: true, data: attachExternalMetaList(stocks) });
+        }
+
+        res.json({ success: true, data: attachExternalMetaList(latest.korean || []) });
     } catch (error) {
         console.error('국내 주식 API 오류:', error);
         res.status(500).json({ success: false, error: error.message });

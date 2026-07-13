@@ -1,6 +1,7 @@
 import yahooFinance from '../services/yahooFinance.js';
 import storage from '../services/localStorage.js';
 import newsService from '../services/newsService.js';
+import cache from '../utils/cache.js';
 
 /**
  * 데이터 수집기 - Yahoo Finance → 로컬 JSON 파일 기록
@@ -396,6 +397,7 @@ function loadCachedNews() {
 }
 
 function hydrateLatestDataFromStorage() {
+    cache.clear();
     latestData = {
         overseas: loadCachedOverseas(),
         korean: loadCachedKorean(),
@@ -414,6 +416,7 @@ function hydrateLatestDataFromStorage() {
 async function runCollection() {
     latestData = await collectAll();
     lastCollectedAt = new Date().toISOString();
+    cache.clear();
 
     // 수집 타임스탬프도 로컬 파일로 저장
     storage.appendRows('수집이력', [[

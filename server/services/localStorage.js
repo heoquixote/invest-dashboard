@@ -58,7 +58,7 @@ function writeSheet(sheetName, data) {
 }
 
 /**
- * 행 추가 (Google Sheets appendRows 대체)
+ * 행 추가
  * rows: 2차원 배열 [[col1, col2, ...], ...]
  */
 function appendRows(sheetName, rows) {
@@ -132,9 +132,6 @@ const sheetMeta = {
     },
     '금_원자재': {
         headers: ['날짜', '시간', '종목코드', '종목명', '현재가(USD)', '변동률(%)', 'KRW환산가']
-    },
-    'LLM분석': {
-        headers: ['날짜', '종목코드', '종목명', '추천', '신뢰도(%)', '리스크', '분석근거', '목표가']
     },
     '수집이력': {
         headers: ['날짜', '시간', '해외주식수', '국내주식수', '원자재수']

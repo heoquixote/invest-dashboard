@@ -38,20 +38,8 @@ export async function fetchHistory(symbol, period = '3mo') {
     return fetchJSON(`/stocks/${encodeURIComponent(symbol)}/history?period=${period}`);
 }
 
-export async function requestAnalysis(symbol) {
-    return fetchJSON(`/analysis/${encodeURIComponent(symbol)}`, { method: 'POST' });
-}
-
-export async function requestPortfolioAnalysis() {
-    return fetchJSON('/analysis/portfolio/all', { method: 'POST' });
-}
-
 export async function checkHealth() {
     return fetchJSON('/health');
-}
-
-export async function checkAnalysisStatus() {
-    return fetchJSON('/analysis/status');
 }
 
 export async function triggerCollect() {

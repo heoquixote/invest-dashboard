@@ -6,12 +6,10 @@ import cron from 'node-cron';
 import stocksRouter from './routes/stocks.js';
 import goldRouter from './routes/gold.js';
 import cryptoRouter from './routes/crypto.js';
-import analysisRouter from './routes/analysis.js';
 import newsRouter from './routes/news.js';
 import privateRouter from './routes/private.js';
 import storage from './services/localStorage.js';
 import collector from './services/collector.js';
-import llmService from './services/llmService.js';
 
 dotenv.config();
 
@@ -136,7 +134,6 @@ async function fetchCheckOnChainMetricSnapshot(url, traceName) {
 app.use('/api/stocks', stocksRouter);
 app.use('/api/gold', goldRouter);
 app.use('/api/crypto', cryptoRouter);
-app.use('/api/analysis', analysisRouter);
 app.use('/api/news', newsRouter);
 app.use('/api/private', privateRouter);
 
@@ -221,7 +218,8 @@ app.get('/api/macros', async (req, res) => {
         const macroDefs = [
             { key: 'US10Y', symbol: '^TNX', name: '미국 10Y', emoji: '🏦', format: 'percent', divisor: 10 },
             { key: 'US13W', symbol: '^IRX', name: '미국 13W', emoji: '⏱️', format: 'percent', divisor: 10 },
-            { key: 'DXY', symbol: 'DX-Y.NYB', name: '달러 인덱스', emoji: '💵', format: 'number' }
+            { key: 'DXY', symbol: 'DX-Y.NYB', name: '달러 인덱스', emoji: '💵', format: 'number' },
+            { key: 'VIX', symbol: '^VIX', name: '공포지수', emoji: '😱', format: 'number' }
         ];
 
         const macroResults = await Promise.all(
@@ -344,7 +342,7 @@ app.get('/api/exchange-rate', async (req, res) => {
 
 // 서버 시작
 async function startServer() {
-    console.log('\n🚀 투자 분석 대시보드 서버 시작...\n');
+    console.log('\n🚀 투자 대시보드 서버 시작...\n');
 
     // 1. 로컬 파일 스토리지 초기화
     storage.setupStorage();
@@ -352,10 +350,7 @@ async function startServer() {
     // 2. 저장된 로컬 캐시를 메모리로 복원
     collector.hydrateLatestDataFromStorage();
 
-    // 3. Gemini LLM 초기화
-    llmService.initLLM();
-
-    // 4. 서버 리스닝을 먼저 시작
+    // 3. 서버 리스닝을 먼저 시작
     app.listen(PORT, () => {
         console.log(`\n✅ 서버 실행 중: http://localhost:${PORT}`);
         console.log('📊 API 엔드포인트:');
@@ -364,19 +359,17 @@ async function startServer() {
         console.log(`   GET  http://localhost:${PORT}/api/gold`);
         console.log(`   GET  http://localhost:${PORT}/api/crypto`);
         console.log(`   GET  http://localhost:${PORT}/api/news`);
-        console.log(`   POST http://localhost:${PORT}/api/analysis/:symbol`);
-        console.log(`   POST http://localhost:${PORT}/api/analysis/portfolio/all`);
         console.log(`   POST http://localhost:${PORT}/api/collect`);
         console.log(`\n🔄 자동 수집: 매일 오전 9시 (전일 종가 + 뉴스)\n`);
     });
 
-    // 5. 초기 데이터 수집은 백그라운드에서 실행
+    // 4. 초기 데이터 수집은 백그라운드에서 실행
     console.log('\n📡 초기 데이터 수집 시작 (백그라운드)...');
     collector.runCollection().catch((error) => {
         console.error('초기 데이터 수집 실패:', error.message);
     });
 
-    // 6. 매일 오전 9시 자동 수집 (전일 종가 업데이트)
+    // 5. 매일 오전 9시 자동 수집 (전일 종가 업데이트)
     cron.schedule('0 9 * * *', async () => {
         console.log('\n⏰ [오전 9시] 전일 종가 데이터 수집 시작...');
         await collector.runCollection();

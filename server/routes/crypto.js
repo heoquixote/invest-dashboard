@@ -11,7 +11,9 @@ const router = Router();
 router.get('/', async (req, res) => {
     try {
         const cached = cache.get('crypto');
-        if (cached) return res.json({ success: true, data: cached, cached: true });
+        if (Array.isArray(cached) && cached.length > 0) {
+            return res.json({ success: true, data: cached, cached: true });
+        }
 
         const latest = collector.getLatestData();
         if (latest.crypto && latest.crypto.length > 0) {
@@ -20,8 +22,12 @@ router.get('/', async (req, res) => {
         }
 
         const crypto = await yahooFinance.getCrypto();
-        cache.set('crypto', crypto, 5 * 60 * 1000);
-        res.json({ success: true, data: crypto });
+        if (crypto.length > 0) {
+            cache.set('crypto', crypto, 5 * 60 * 1000);
+            return res.json({ success: true, data: crypto });
+        }
+
+        res.json({ success: true, data: latest.crypto || [] });
     } catch (error) {
         console.error('암호화폐 API 오류:', error);
         res.status(500).json({ success: false, error: error.message });

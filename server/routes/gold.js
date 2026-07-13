@@ -11,7 +11,9 @@ const router = Router();
 router.get('/', async (req, res) => {
     try {
         const cached = cache.get('commodities');
-        if (cached) return res.json({ success: true, data: cached, cached: true });
+        if (Array.isArray(cached) && cached.length > 0) {
+            return res.json({ success: true, data: cached, cached: true });
+        }
 
         const latest = collector.getLatestData();
         if (latest.commodities.length > 0) {
@@ -20,8 +22,12 @@ router.get('/', async (req, res) => {
         }
 
         const commodities = await yahooFinance.getCommodities();
-        cache.set('commodities', commodities, 5 * 60 * 1000);
-        res.json({ success: true, data: commodities });
+        if (commodities.length > 0) {
+            cache.set('commodities', commodities, 5 * 60 * 1000);
+            return res.json({ success: true, data: commodities });
+        }
+
+        res.json({ success: true, data: latest.commodities || [] });
     } catch (error) {
         console.error('금/원자재 API 오류:', error);
         res.status(500).json({ success: false, error: error.message });

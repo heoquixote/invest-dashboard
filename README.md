@@ -171,14 +171,12 @@ invest-dashboard/
 │   │   ├── gold.js
 │   │   ├── crypto.js
 │   │   ├── news.js
-│   │   ├── private.js
-│   │   └── analysis.js
+│   │   └── private.js
 │   ├── services/
 │   │   ├── yahooFinance.js
 │   │   ├── collector.js
 │   │   ├── localStorage.js
-│   │   ├── newsService.js
-│   │   └── llmService.js
+│   │   └── newsService.js
 │   └── utils/
 │       └── cache.js
 ├── src/
@@ -189,8 +187,7 @@ invest-dashboard/
 │       ├── api.js
 │       ├── dashboard.js
 │       ├── charts.js
-│       ├── stockCard.js
-│       └── analysisPanel.js
+│       └── stockCard.js
 ├── data/
 ├── .env.example
 ├── package.json
@@ -214,14 +211,13 @@ cp .env.example .env
 선택값:
 
 ```env
-GEMINI_API_KEY=your_key
 PORT=3001
 ```
 
 참고:
 
-- `GEMINI_API_KEY`가 없어도 대시보드 핵심 기능은 동작합니다.
-- 현재 UI에서는 AI 분석 버튼을 제거해둔 상태지만, 관련 서버 코드는 남아 있습니다.
+- 기본 포트는 `3001`입니다.
+- 수집 데이터(`data/*.json`)와 개인 포트폴리오 관련 로컬 상태는 Git 추적에서 제외합니다.
 
 ### 3. 개발 실행
 
