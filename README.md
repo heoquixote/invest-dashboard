@@ -300,3 +300,13 @@ npm start
 ## 라이선스
 
 MIT
+
+## 데이터 러너즈 사이트 배포 (2026-10)
+
+- 주소: https://www.data-learners.com/invest/ (바로가기 > 대시보드 > 투자 대시보드)
+- 로그인: 데이터 러너즈 계정(면담 로그와 같은 `dl/login`), 소유자 이메일만 접근 허용
+- 백엔드: n8n 워크플로우 `[Data Learners] 투자 대시보드 API` (`POST /webhook/dl/invest`)
+  - 시세: 매일 09:00(KST) 수집, `invest_snapshot` 데이터 테이블에 저장. 화면의 `수집` 버튼으로 즉시 재수집
+  - 개인 데이터: 포트폴리오, 관심 종목, 투자 전략 메모, 내가 추가한 종목, 거래 히스토리를 `invest_private`에 계정별 저장
+- 배포: `npm run build:site` 후 `dist/` 내용을 `heoquixote.github.io` 저장소의 `invest/`에 복사
+- 로컬 `npm run dev`도 같은 n8n API를 사용하므로 Express 서버 없이 `npm run dev:client`만으로 실행 가능

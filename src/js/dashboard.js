@@ -65,10 +65,10 @@ const state = {
     news: { updatedAt: null, categories: [], items: {} },
     custom: [],
     privateHistory: [],
-    favorites: JSON.parse(localStorage.getItem('favoriteStocks') || '[]'),
-    strategyMemo: localStorage.getItem('strategyMemo') || '',
-    strategyMemoSavedAt: localStorage.getItem('strategyMemoSavedAt') || '',
-    portfolio: normalizePortfolioItems(JSON.parse(localStorage.getItem('portfolio') || '[]')),
+    favorites: api.getPrivate('favorites', []),
+    strategyMemo: api.getPrivate('strategyMemo', {}).text || '',
+    strategyMemoSavedAt: api.getPrivate('strategyMemo', {}).savedAt || '',
+    portfolio: normalizePortfolioItems(api.getPrivate('portfolio', [])),
     loading: false
 };
 
@@ -990,8 +990,7 @@ function setupStrategyMemo() {
         textarea.addEventListener('input', () => {
             state.strategyMemo = textarea.value;
             state.strategyMemoSavedAt = new Date().toISOString();
-            localStorage.setItem('strategyMemo', state.strategyMemo);
-            localStorage.setItem('strategyMemoSavedAt', state.strategyMemoSavedAt);
+            saveStrategyMemo();
             updateStrategySavedAt();
         });
     }
@@ -1000,12 +999,15 @@ function setupStrategyMemo() {
         clearButton.addEventListener('click', () => {
             state.strategyMemo = '';
             state.strategyMemoSavedAt = new Date().toISOString();
-            localStorage.setItem('strategyMemo', '');
-            localStorage.setItem('strategyMemoSavedAt', state.strategyMemoSavedAt);
+            saveStrategyMemo();
             if (textarea) textarea.value = '';
             updateStrategySavedAt();
         });
     }
+}
+
+function saveStrategyMemo() {
+    api.setPrivate('strategyMemo', { text: state.strategyMemo, savedAt: state.strategyMemoSavedAt });
 }
 
 function renderStrategyMemo() {
@@ -1296,7 +1298,7 @@ function toggleFavoriteStock(symbol) {
         state.favorites = [...state.favorites, symbol];
     }
 
-    localStorage.setItem('favoriteStocks', JSON.stringify(state.favorites));
+    api.setPrivate('favorites', state.favorites);
     renderCurrentView();
 }
 
@@ -1370,6 +1372,7 @@ function setupHeaderButtons() {
     document.getElementById('btnRefresh')?.addEventListener('click', async () => {
         const btn = document.getElementById('btnRefresh');
         btn.classList.add('spinning');
+        api.invalidateMarket();
         await loadAllData();
         btn.classList.remove('spinning');
     });
@@ -1383,6 +1386,7 @@ function setupHeaderButtons() {
             await loadAllData();
         } catch (e) {
             console.error('수집 실패:', e);
+            alert(e.message || '수집에 실패했습니다.');
         } finally {
             btn.disabled = false;
             btn.textContent = '↓ 수집';
@@ -1818,7 +1822,7 @@ function removeFromPortfolio(symbol) {
 }
 
 function savePortfolio() {
-    localStorage.setItem('portfolio', JSON.stringify(normalizePortfolioItems(state.portfolio)));
+    api.setPrivate('portfolio', normalizePortfolioItems(state.portfolio));
 }
 
 function renderPortfolio() {

@@ -3387,3 +3387,143 @@ body {
         min-width: 620px;
     }
 }
+
+/* =============================================
+   로그인 게이트 · 계정 바 (데이터 러너즈 배포)
+   ============================================= */
+body.auth-locked .app {
+    visibility: hidden;
+}
+
+.auth-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: var(--bg-primary);
+}
+
+.auth-gate[hidden] {
+    display: none;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 380px;
+    padding: 32px 28px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.auth-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--accent-primary-light);
+    margin-bottom: 16px;
+}
+
+.auth-card h1 {
+    font-size: 22px;
+    color: var(--text-primary);
+    margin: 0 0 8px;
+}
+
+.auth-desc {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin: 0 0 20px;
+}
+
+.auth-message {
+    font-size: 13px;
+    color: #ef4444;
+    margin: 0 0 12px;
+}
+
+.auth-submit {
+    width: 100%;
+}
+
+.auth-submit:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.auth-back,
+.sidebar-home-link {
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.auth-back:hover,
+.sidebar-home-link:hover {
+    color: var(--accent-primary-light);
+}
+
+.sidebar-home-link {
+    margin-top: 8px;
+}
+
+.account-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.save-status {
+    font-size: 12px;
+    color: var(--text-muted);
+    min-width: 0;
+}
+
+.save-status[data-state="error"] {
+    color: #ef4444;
+}
+
+.save-status[data-state="saved"] {
+    color: var(--accent-primary-light);
+}
+
+.import-snippet {
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-all;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin: 0 0 16px;
+    user-select: all;
+}
+
+.import-textarea {
+    resize: vertical;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+}
+
+@media (max-width: 768px) {
+    .account-chip,
+    .save-status {
+        display: none;
+    }
+}
