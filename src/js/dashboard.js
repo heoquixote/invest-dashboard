@@ -634,9 +634,9 @@ function renderNewsView() {
     }
 
     container.innerHTML = sortedItems.map(item => `
-        <article class="news-card">
+        <article class="news-card" data-news-cat="${item.category || ''}">
             <div class="news-card-top">
-                <span class="news-badge">${item.categoryName || item.category}</span>
+                <span class="news-badge" data-news-cat="${item.category || ''}">${item.categoryName || item.category}</span>
                 <span class="news-time">${item.publishedAt ? formatNewsDate(item.publishedAt) : '시간 정보 없음'}</span>
             </div>
             <a class="news-title" href="${item.link}" target="_blank" rel="noopener noreferrer">${item.title}</a>
