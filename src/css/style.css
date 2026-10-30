@@ -3795,3 +3795,10 @@ body {
 .stock-favorite-btn.active {
     color: #ffcf4a;
 }
+
+/* 카드 상단 라임 라인 제거 (호버·선택 상태 모두) */
+.summary-card::before,
+.summary-card:hover::before,
+.summary-card-filter.active-filter::before {
+    display: none;
+}
