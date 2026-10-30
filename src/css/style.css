@@ -2,96 +2,109 @@
    Investment Dashboard - Theme System
    ========================================== */
 
+/* 데이터 러너즈 브랜드 토큰 (www.data-learners.com 과 동일 팔레트) */
 :root,
 [data-theme="dark"] {
+    color-scheme: dark;
     /* Background */
-    --bg-primary: #0a0e17;
-    --bg-secondary: #111827;
-    --bg-tertiary: #1a2235;
-    --bg-card: rgba(17, 24, 39, 0.8);
-    --bg-card-hover: rgba(26, 34, 53, 0.95);
-    --bg-glass: rgba(17, 24, 39, 0.6);
+    --bg-primary: #050607;
+    --bg-secondary: #0b0d0e;
+    --bg-tertiary: #121516;
+    --bg-card: rgba(11, 13, 14, 0.92);
+    --bg-card-hover: #121516;
+    --bg-glass: rgba(11, 13, 14, 0.72);
 
     /* Text */
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --text-inverse: #0a0e17;
+    --text-primary: #f5f7f2;
+    --text-secondary: #c9cfcb;
+    --text-muted: #879089;
+    --text-inverse: #050607;
 
-    /* Accent Colors */
-    --accent-primary: #6366f1;
-    --accent-primary-light: #818cf8;
-    --accent-glow: rgba(99, 102, 241, 0.3);
+    /* Accent: 러너즈 라임 */
+    --accent-primary: #c8ff3d;
+    --accent-primary-light: #d6ff6a;
+    --accent-ink: #0d1006;
+    --accent-soft: rgba(200, 255, 61, 0.1);
+    --accent-glow: rgba(200, 255, 61, 0.22);
 
-    /* Status Colors - Korean Convention: 상승=빨간, 하락=파란 */
-    --color-up: #ef4444;
-    --color-up-bg: rgba(239, 68, 68, 0.12);
-    --color-up-glow: rgba(239, 68, 68, 0.4);
-    --color-down: #3b82f6;
-    --color-down-bg: rgba(59, 130, 246, 0.12);
-    --color-down-glow: rgba(59, 130, 246, 0.4);
-    --color-hold: #f59e0b;
-    --color-hold-bg: rgba(245, 158, 11, 0.12);
+    /* Status Colors - Korean Convention: 상승=빨강, 하락=파랑 (브랜드 로즈·시안 톤) */
+    --color-up: #ff7a92;
+    --color-up-bg: rgba(255, 122, 146, 0.12);
+    --color-up-glow: rgba(255, 122, 146, 0.4);
+    --color-down: #66dbff;
+    --color-down-bg: rgba(102, 219, 255, 0.12);
+    --color-down-glow: rgba(102, 219, 255, 0.4);
+    --color-hold: #ffcf4a;
+    --color-hold-bg: rgba(255, 207, 74, 0.12);
 
     /* Borders */
-    --border-color: rgba(148, 163, 184, 0.1);
-    --border-glow: rgba(99, 102, 241, 0.3);
+    --border-color: rgba(255, 255, 255, 0.11);
+    --border-strong: rgba(255, 255, 255, 0.22);
+    --border-glow: rgba(200, 255, 61, 0.35);
 
     /* Shadows */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.2);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 24px 50px rgba(0, 0, 0, 0.55);
+    --shadow-glow: 0 10px 30px rgba(200, 255, 61, 0.14);
+
+    /* Type */
+    --font-en: "Space Grotesk", "Pretendard Variable", sans-serif;
+    --font-ko: "Pretendard Variable", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 
     /* Sizing */
     --sidebar-width: 240px;
     --header-height: 64px;
-    --radius-sm: 8px;
+    --radius-sm: 6px;
     --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 20px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
 
     /* Transitions */
     --transition-fast: 0.15s ease;
-    --transition-normal: 0.25s ease;
-    --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.2s cubic-bezier(.2, .8, .2, 1);
+    --transition-slow: 0.35s cubic-bezier(.2, .8, .2, 1);
 }
 
 /* ==========================================
-   Light Theme
+   Light Theme (러너즈 라이트 변형)
    ========================================== */
 
 [data-theme="light"] {
-    --bg-primary: #f8fafc;
+    color-scheme: light;
+    --bg-primary: #f4f5f1;
     --bg-secondary: #ffffff;
-    --bg-tertiary: #f1f5f9;
-    --bg-card: rgba(255, 255, 255, 0.9);
-    --bg-card-hover: rgba(241, 245, 249, 0.95);
-    --bg-glass: rgba(255, 255, 255, 0.7);
+    --bg-tertiary: #eceee8;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f7f8f4;
+    --bg-glass: rgba(255, 255, 255, 0.8);
 
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
-    --text-inverse: #f8fafc;
+    --text-primary: #0b0d0e;
+    --text-secondary: #3d4440;
+    --text-muted: #6b736e;
+    --text-inverse: #f5f7f2;
 
-    --accent-primary: #4f46e5;
-    --accent-primary-light: #6366f1;
-    --accent-glow: rgba(79, 70, 229, 0.2);
+    --accent-primary: #4d7a00;
+    --accent-primary-light: #5f9200;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(77, 122, 0, 0.08);
+    --accent-glow: rgba(77, 122, 0, 0.18);
 
-    --color-up: #dc2626;
-    --color-up-bg: rgba(220, 38, 38, 0.08);
-    --color-up-glow: rgba(220, 38, 38, 0.3);
-    --color-down: #2563eb;
-    --color-down-bg: rgba(37, 99, 235, 0.08);
-    --color-down-glow: rgba(37, 99, 235, 0.3);
+    --color-up: #d6274a;
+    --color-up-bg: rgba(214, 39, 74, 0.08);
+    --color-up-glow: rgba(214, 39, 74, 0.3);
+    --color-down: #0a78b8;
+    --color-down-bg: rgba(10, 120, 184, 0.08);
+    --color-down-glow: rgba(10, 120, 184, 0.3);
 
-    --border-color: rgba(15, 23, 42, 0.08);
-    --border-glow: rgba(79, 70, 229, 0.2);
+    --border-color: rgba(11, 13, 14, 0.1);
+    --border-strong: rgba(11, 13, 14, 0.2);
+    --border-glow: rgba(77, 122, 0, 0.3);
 
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
     --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
     --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.1);
-    --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.1);
+    --shadow-glow: 0 8px 24px rgba(77, 122, 0, 0.12);
 }
 
 /* ==========================================
@@ -111,7 +124,7 @@ html {
 }
 
 body {
-    font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: var(--font-ko);
     background: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
@@ -169,7 +182,7 @@ body {
 .logo-text {
     font-size: 18px;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--accent-primary-light), #a78bfa);
+    background: none;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -437,7 +450,7 @@ body {
 }
 
 .card-icon.total {
-    background: rgba(99, 102, 241, 0.15);
+    background: rgba(200, 255, 61, 0.15);
 }
 
 .card-icon.up {
@@ -514,7 +527,7 @@ body {
     gap: 6px;
     max-width: 260px;
     padding: 10px;
-    border: 1px solid rgba(99, 102, 241, 0.24);
+    border: 1px solid rgba(200, 255, 61, 0.24);
     border-radius: 14px;
     background: rgba(15, 23, 42, 0.96);
     box-shadow: 0 18px 50px rgba(2, 6, 23, 0.45);
@@ -567,7 +580,7 @@ body {
 .info-badge:focus-visible {
     border-color: #a5b4fc;
     color: #eef2ff;
-    background: rgba(99, 102, 241, 0.08);
+    background: rgba(200, 255, 61, 0.08);
     outline: none;
 }
 
@@ -756,8 +769,8 @@ body {
     align-items: center;
     gap: 4px;
     padding: 4px;
-    background: rgba(99, 102, 241, 0.08);
-    border: 1px solid rgba(99, 102, 241, 0.24);
+    background: rgba(200, 255, 61, 0.08);
+    border: 1px solid rgba(200, 255, 61, 0.24);
     border-radius: 999px;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
@@ -781,15 +794,15 @@ body {
 }
 
 .pf-cash-toggle-btn.active {
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-light));
-    color: white;
-    box-shadow: 0 8px 18px rgba(99, 102, 241, 0.28);
+    background: var(--accent-primary);
+    color: var(--accent-ink);
+    box-shadow: 0 8px 18px rgba(200, 255, 61, 0.28);
 }
 
 .btn-add-stock {
     padding: 8px 18px;
     background: var(--accent-primary);
-    color: white;
+    color: var(--accent-ink);
     border: none;
     border-radius: 10px;
     font-size: 13px;
@@ -969,7 +982,7 @@ body {
 .btn-confirm-add {
     padding: 8px 20px;
     background: var(--accent-primary);
-    color: white;
+    color: var(--accent-ink);
     border: none;
     border-radius: 8px;
     font-size: 13px;
@@ -1107,13 +1120,13 @@ body {
 }
 
 .pf-allocation-item:hover {
-    background: rgba(99, 102, 241, 0.08);
-    border-color: rgba(99, 102, 241, 0.18);
+    background: rgba(200, 255, 61, 0.08);
+    border-color: rgba(200, 255, 61, 0.18);
 }
 
 .pf-allocation-item.active {
-    background: rgba(99, 102, 241, 0.14);
-    border-color: rgba(99, 102, 241, 0.4);
+    background: rgba(200, 255, 61, 0.14);
+    border-color: rgba(200, 255, 61, 0.4);
     box-shadow: inset 0 0 0 1px rgba(129, 140, 248, 0.12);
 }
 
@@ -1278,7 +1291,7 @@ body {
 }
 
 .pf-table-row:hover {
-    background: rgba(99, 102, 241, 0.04);
+    background: rgba(200, 255, 61, 0.04);
 }
 
 .pf-table-row.up:hover {
@@ -1431,8 +1444,8 @@ body {
 .btn-edit-stock {
     min-width: 44px;
     height: 28px;
-    border: 1px solid rgba(99, 102, 241, 0.28);
-    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(200, 255, 61, 0.28);
+    background: rgba(200, 255, 61, 0.12);
     color: #a5b4fc;
     border-radius: 8px;
     font-size: 12px;
@@ -1446,8 +1459,8 @@ body {
 }
 
 .btn-edit-stock:hover {
-    background: rgba(99, 102, 241, 0.22);
-    border-color: rgba(99, 102, 241, 0.45);
+    background: rgba(200, 255, 61, 0.22);
+    border-color: rgba(200, 255, 61, 0.45);
     color: #c7d2fe;
 }
 
@@ -1558,12 +1571,12 @@ body {
 .filter-tab:hover {
     color: var(--text-primary);
     border-color: var(--accent-primary);
-    background: rgba(99, 102, 241, 0.08);
+    background: rgba(200, 255, 61, 0.08);
 }
 
 .filter-tab.active {
     background: var(--accent-primary);
-    color: white;
+    color: var(--accent-ink);
     border-color: var(--accent-primary);
     box-shadow: 0 2px 10px var(--accent-glow);
 }
@@ -1585,12 +1598,12 @@ body {
 .category-chip:hover {
     color: var(--text-primary);
     border-color: var(--accent-primary);
-    background: rgba(99, 102, 241, 0.08);
+    background: rgba(200, 255, 61, 0.08);
 }
 
 .category-chip.active {
     background: var(--accent-primary);
-    color: white;
+    color: var(--accent-ink);
     border-color: var(--accent-primary);
     box-shadow: 0 2px 8px var(--accent-glow);
 }
@@ -1613,12 +1626,12 @@ body {
 .movement-chip:hover {
     color: var(--text-primary);
     border-color: var(--accent-primary);
-    background: rgba(99, 102, 241, 0.08);
+    background: rgba(200, 255, 61, 0.08);
 }
 
 .movement-chip.active {
     background: var(--accent-primary);
-    color: white;
+    color: var(--accent-ink);
     border-color: var(--accent-primary);
     box-shadow: 0 2px 8px var(--accent-glow);
 }
@@ -1746,7 +1759,7 @@ body {
 }
 
 .treemap-tab.active {
-    background: rgba(99, 102, 241, 0.14);
+    background: rgba(200, 255, 61, 0.14);
 }
 
 .treemap-note {
@@ -2147,7 +2160,7 @@ body {
 .btn-ai-analyze {
     padding: 4px 10px;
     border: 1px solid var(--accent-primary);
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba(200, 255, 61, 0.1);
     color: var(--accent-primary-light);
     font-size: 11px;
     font-family: inherit;
@@ -2159,7 +2172,7 @@ body {
 
 .btn-ai-analyze:hover {
     background: var(--accent-primary);
-    color: white;
+    color: var(--accent-ink);
     box-shadow: 0 0 12px var(--accent-glow);
 }
 
@@ -2209,7 +2222,7 @@ body {
 
 .period-tab.active {
     background: var(--accent-primary);
-    color: white;
+    color: var(--accent-ink);
 }
 
 .chart-container {
@@ -2420,8 +2433,8 @@ body {
     width: 100%;
     padding: 12px;
     border: none;
-    background: linear-gradient(135deg, var(--accent-primary), #8b5cf6);
-    color: white;
+    background: var(--accent-primary);
+    color: var(--accent-ink);
     font-size: 14px;
     font-family: inherit;
     font-weight: 600;
@@ -2431,7 +2444,7 @@ body {
 }
 
 .btn-analyze:hover {
-    box-shadow: 0 4px 24px rgba(99, 102, 241, 0.5);
+    box-shadow: 0 4px 24px rgba(200, 255, 61, 0.5);
     transform: translateY(-1px);
 }
 
@@ -2599,7 +2612,7 @@ body {
     gap: 6px;
     padding: 6px 14px;
     border: 1px solid var(--accent-primary);
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba(200, 255, 61, 0.1);
     color: var(--accent-primary-light);
     font-size: 12px;
     font-family: inherit;
@@ -2611,7 +2624,7 @@ body {
 
 .btn-add-custom:hover {
     background: var(--accent-primary);
-    color: white;
+    color: var(--accent-ink);
     box-shadow: 0 0 16px var(--accent-glow);
 }
 
@@ -2663,7 +2676,7 @@ body {
 .form-input:focus,
 .form-select:focus {
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    box-shadow: 0 0 0 3px rgba(200, 255, 61, 0.15);
 }
 
 .form-hint {
@@ -2683,8 +2696,8 @@ body {
     flex: 1;
     padding: 10px 20px;
     border: none;
-    background: linear-gradient(135deg, var(--accent-primary), #8b5cf6);
-    color: white;
+    background: var(--accent-primary);
+    color: var(--accent-ink);
     font-size: 14px;
     font-family: inherit;
     font-weight: 600;
@@ -2694,7 +2707,7 @@ body {
 }
 
 .btn-submit-stock:hover {
-    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 4px 20px rgba(200, 255, 61, 0.4);
     transform: translateY(-1px);
 }
 
@@ -2934,8 +2947,8 @@ body {
 }
 
 .history-overview-card {
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(15, 23, 42, 0.92));
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: linear-gradient(135deg, rgba(200, 255, 61, 0.12), rgba(15, 23, 42, 0.92));
+    border: 1px solid rgba(200, 255, 61, 0.2);
     border-radius: var(--radius-lg);
     padding: 22px;
     display: flex;
@@ -2969,8 +2982,8 @@ body {
     font-size: 12px;
     font-weight: 700;
     color: var(--accent-primary-light);
-    background: rgba(99, 102, 241, 0.14);
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: rgba(200, 255, 61, 0.14);
+    border: 1px solid rgba(200, 255, 61, 0.2);
 }
 
 .history-overview-grid {
@@ -3056,8 +3069,8 @@ body {
     font-size: 12px;
     font-weight: 700;
     color: var(--accent-primary-light);
-    background: rgba(99, 102, 241, 0.12);
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: rgba(200, 255, 61, 0.12);
+    border: 1px solid rgba(200, 255, 61, 0.2);
 }
 
 .history-asset-note {
@@ -3301,8 +3314,8 @@ body {
     font-size: 12px;
     font-weight: 700;
     color: var(--accent-primary-light);
-    background: rgba(99, 102, 241, 0.12);
-    border: 1px solid rgba(99, 102, 241, 0.2);
+    background: rgba(200, 255, 61, 0.12);
+    border: 1px solid rgba(200, 255, 61, 0.2);
 }
 
 .strategy-clear-btn {
@@ -3331,8 +3344,8 @@ body {
 }
 
 .strategy-textarea:focus {
-    border-color: rgba(99, 102, 241, 0.7);
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+    border-color: rgba(200, 255, 61, 0.7);
+    box-shadow: 0 0 0 4px rgba(200, 255, 61, 0.12);
 }
 
 .heatmap-section {
@@ -3349,8 +3362,8 @@ body {
 .heatmap-open-btn {
     padding: 10px 16px;
     border-radius: 999px;
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-light));
-    color: #fff;
+    background: var(--accent-primary);
+    color: var(--accent-ink);
     font-size: 13px;
     font-weight: 700;
     text-decoration: none;
@@ -3526,4 +3539,259 @@ body.auth-locked .app {
     .save-status {
         display: none;
     }
+}
+
+/* =============================================
+   데이터 러너즈 브랜드 톤 정리 (홈페이지·면담 로그와 통일)
+   ============================================= */
+body {
+    font-family: var(--font-ko);
+    -webkit-font-smoothing: antialiased;
+    word-break: keep-all;
+}
+
+/* 홈페이지와 같은 미세 그리드 + 라임 하이라이트 배경 */
+[data-theme="dark"] .main-content {
+    background:
+        radial-gradient(900px circle at 85% 0, rgba(200, 255, 61, 0.06), transparent 50%),
+        linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
+    background-size: auto, 56px 56px, 56px 56px;
+    background-attachment: local;
+}
+
+/* 숫자·영문 라벨은 Space Grotesk (러너즈 영문 서체) */
+.card-value,
+.stock-price,
+.logo-text,
+.header-left h1,
+.auth-brand,
+.card-label,
+.pf-summary-value,
+.stock-symbol {
+    font-family: var(--font-en);
+    font-variant-numeric: tabular-nums;
+}
+
+.card-label {
+    letter-spacing: 0.12em;
+    font-weight: 600;
+    font-size: 11px;
+}
+
+/* 로고: 라임 마크 + 흰 워드마크 */
+.logo-text,
+.auth-brand {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--text-primary);
+    letter-spacing: 0.01em;
+}
+
+.logo-icon {
+    animation: none;
+}
+
+.sidebar-header .logo::after {
+    content: "DATA LEARNERS";
+    display: block;
+    flex-basis: 100%;
+    margin-top: 4px;
+    color: var(--accent-primary);
+    font: 500 10px/1 var(--font-en);
+    letter-spacing: 0.18em;
+}
+
+.sidebar-header .logo {
+    flex-wrap: wrap;
+    row-gap: 0;
+}
+
+/* 사이드바 활성 메뉴: 라임 바 */
+.nav-item {
+    border-radius: var(--radius-sm);
+}
+
+.nav-item.active {
+    background: var(--accent-soft);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.nav-item.active::before {
+    width: 3px;
+    height: 70%;
+    border-radius: 0 2px 2px 0;
+}
+
+/* 카드: 평면 서피스 + 얇은 라인, 호버 시 라임 라인 */
+.summary-card,
+.stock-card {
+    backdrop-filter: none;
+    box-shadow: none;
+}
+
+.summary-card:hover,
+.stock-card:hover {
+    border-color: var(--border-glow);
+    box-shadow: var(--shadow-md);
+}
+
+.summary-card::before {
+    background: var(--accent-primary);
+    height: 2px;
+}
+
+/* 컬러 그라디언트 아이콘 → 러너즈식 무채색 타일 */
+.card-icon,
+.card-icon[class*=" "] {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+.card-icon.up {
+    background: var(--color-up-bg);
+    border-color: transparent;
+}
+
+.card-icon.down {
+    background: var(--color-down-bg);
+    border-color: transparent;
+}
+
+.card-icon.total {
+    background: var(--accent-soft);
+    border-color: transparent;
+}
+
+/* 버튼: 러너즈 기본(라인)·주요(라임) */
+.btn-refresh,
+.btn-collect,
+.btn-theme-toggle {
+    backdrop-filter: none;
+    border-color: var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+}
+
+.btn-refresh:hover,
+.btn-collect:hover,
+.btn-theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--border-glow);
+    color: var(--text-primary);
+    box-shadow: none;
+    transform: translateY(-1px);
+}
+
+.btn-submit-stock,
+.btn-analyze,
+.btn-confirm-add {
+    background: var(--accent-primary);
+    color: var(--accent-ink);
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+}
+
+.btn-submit-stock:hover,
+.btn-analyze:hover,
+.btn-confirm-add:hover {
+    background: var(--accent-primary-light);
+    box-shadow: var(--shadow-glow);
+}
+
+/* 칩·탭: 활성은 라임 + 잉크 텍스트 */
+.filter-tab,
+.category-chip,
+.movement-chip,
+.period-tab {
+    font-weight: 600;
+}
+
+/* 입력 포커스: 라임 */
+.form-input:focus,
+.form-select:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* 모달·로그인 카드 */
+.modal-content,
+.auth-card {
+    border-radius: var(--radius-lg);
+    border-color: var(--border-strong);
+}
+
+.modal-overlay {
+    background: rgba(5, 6, 7, 0.78);
+}
+
+.auth-gate {
+    background:
+        radial-gradient(700px circle at 80% 0, rgba(200, 255, 61, 0.08), transparent 55%),
+        var(--bg-primary);
+}
+
+.auth-brand {
+    color: var(--text-primary);
+}
+
+.auth-brand::after {
+    content: "· DATA LEARNERS";
+    color: var(--accent-primary);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    font-weight: 500;
+}
+
+/* 스크롤바 */
+* {
+    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}
+
+[data-theme="light"] * {
+    scrollbar-color: rgba(11, 13, 14, 0.2) transparent;
+}
+
+[data-theme="light"] .auth-gate {
+    background: var(--bg-primary);
+}
+
+/* 지수·매크로 카드 테두리도 상승=로즈, 하락=시안 규칙으로 통일 */
+.index-card.up,
+.macro-card.up {
+    border-color: rgba(255, 122, 146, 0.28);
+}
+
+.index-card.down,
+.macro-card.down {
+    border-color: rgba(102, 219, 255, 0.28);
+}
+
+.index-card.up:hover {
+    border-color: rgba(255, 122, 146, 0.5);
+    box-shadow: none;
+}
+
+.index-card.down:hover {
+    border-color: rgba(102, 219, 255, 0.5);
+    box-shadow: none;
+}
+
+/* 즐겨찾기 칩: 러너즈 앰버 평면형 */
+.favorite-chip.active {
+    background: #ffcf4a;
+    border-color: #ffcf4a;
+    color: #0d1006;
+    box-shadow: none;
+}
+
+.stock-favorite-btn.active {
+    color: #ffcf4a;
 }

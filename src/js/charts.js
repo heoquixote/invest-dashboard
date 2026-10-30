@@ -11,15 +11,15 @@ const chartDefaultConfig = {
     plugins: {
         legend: { display: false },
         tooltip: {
-            backgroundColor: 'rgba(17, 24, 39, 0.95)',
-            titleColor: '#f1f5f9',
-            bodyColor: '#94a3b8',
-            borderColor: 'rgba(99, 102, 241, 0.3)',
+            backgroundColor: 'rgba(11, 13, 14, 0.96)',
+            titleColor: '#f5f7f2',
+            bodyColor: '#c9cfcb',
+            borderColor: 'rgba(200, 255, 61, 0.35)',
             borderWidth: 1,
             padding: 12,
-            cornerRadius: 8,
-            titleFont: { size: 13, weight: '600' },
-            bodyFont: { size: 12 },
+            cornerRadius: 6,
+            titleFont: { size: 13, weight: '600', family: 'Space Grotesk, Pretendard Variable, sans-serif' },
+            bodyFont: { size: 12, family: 'Space Grotesk, Pretendard Variable, sans-serif' },
             callbacks: {
                 label: function (context) {
                     return ` ${context.parsed.y.toLocaleString()}`;
@@ -30,12 +30,12 @@ const chartDefaultConfig = {
     scales: {
         x: {
             grid: {
-                color: 'rgba(148, 163, 184, 0.06)',
+                color: 'rgba(255, 255, 255, 0.06)',
                 lineWidth: 1
             },
             ticks: {
-                color: '#64748b',
-                font: { size: 11 },
+                color: '#879089',
+                font: { size: 11, family: 'Space Grotesk, Pretendard Variable, sans-serif' },
                 maxRotation: 0,
                 autoSkip: true,
                 maxTicksLimit: 8
@@ -44,12 +44,12 @@ const chartDefaultConfig = {
         y: {
             position: 'right',
             grid: {
-                color: 'rgba(148, 163, 184, 0.06)',
+                color: 'rgba(255, 255, 255, 0.06)',
                 lineWidth: 1
             },
             ticks: {
-                color: '#64748b',
-                font: { size: 11 },
+                color: '#879089',
+                font: { size: 11, family: 'Space Grotesk, Pretendard Variable, sans-serif' },
                 callback: function (value) {
                     return value.toLocaleString();
                 }
@@ -209,10 +209,10 @@ export function renderPortfolioAllocationChart(canvasId, items = [], options = {
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                    titleColor: '#f1f5f9',
-                    bodyColor: '#cbd5e1',
-                    borderColor: 'rgba(99, 102, 241, 0.2)',
+                    backgroundColor: 'rgba(11, 13, 14, 0.96)',
+                    titleColor: '#f5f7f2',
+                    bodyColor: '#c9cfcb',
+                    borderColor: 'rgba(200, 255, 61, 0.25)',
                     borderWidth: 1,
                     callbacks: {
                         label(context) {

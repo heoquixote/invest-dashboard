@@ -2145,11 +2145,11 @@ function matchesPortfolioAllocationFilter(portfolioItem) {
 
 function buildPortfolioAllocation(allStocks) {
     const allocationMap = new Map([
-        ['korean', { key: 'korean', label: '국내주식', color: '#10b981', value: 0, invested: 0 }],
-        ['overseas', { key: 'overseas', label: '해외주식', color: '#f59e0b', value: 0, invested: 0 }],
-        ['etf', { key: 'etf', label: 'ETF', color: '#38bdf8', value: 0, invested: 0 }],
-        ['crypto', { key: 'crypto', label: '코인', color: '#ef4444', value: 0, invested: 0 }],
-        ['cash', { key: 'cash', label: '원화/현금', color: '#6366f1', value: 0, invested: 0 }]
+        ['korean', { key: 'korean', label: '국내주식', color: '#61db9c', value: 0, invested: 0 }],
+        ['overseas', { key: 'overseas', label: '해외주식', color: '#a896ff', value: 0, invested: 0 }],
+        ['etf', { key: 'etf', label: 'ETF', color: '#66dbff', value: 0, invested: 0 }],
+        ['crypto', { key: 'crypto', label: '코인', color: '#ff9a51', value: 0, invested: 0 }],
+        ['cash', { key: 'cash', label: '원화/현금', color: '#c8ff3d', value: 0, invested: 0 }]
     ]);
 
     state.portfolio.forEach(item => {
